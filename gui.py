@@ -161,6 +161,29 @@ class Filtro:
         kernel = np.array([[1, 1, 1], [1, 5, 1], [1, 1, 1]]) / 13
         imagen_promediador_pesado = cv2.filter2D(self.imagen_original, -1, kernel)
         return imagen_promediador_pesado
+    
+    def filtro_Robert(self):
+        if self.imagen_original is None:
+            print("Error en la lectura de imagen Filtro Robert")
+            return None
+        else: 
+            print("lectura de imagen exitosa imagen Filtro Robert")
+        #asegurar la conversion a escala de grises
+
+        self.imagen_original = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
+         
+        # Definir el kernel de Robert
+        kernel_roberts_x = np.array([[1, 0], [0, -1]], dtype=np.float32)
+        kernel_roberts_y = np.array([[0, 1], [-1, 0]], dtype=np.float32)
+        # Aplicar el filtro
+        bordes_roberts_x = cv2.filter2D(self.imagen_original, -1, kernel_roberts_x)
+        bordes_roberts_y = cv2.filter2D(self.imagen_original, -1, kernel_roberts_y)
+        imagen_bordes_roberts = cv2.addWeighted(bordes_roberts_x, 0.5, bordes_roberts_y, 0.5, 0)
+
+        if(imagen_bordes_roberts.any()): 
+            print("obtencion de bordes exitosas")
+        return imagen_bordes_roberts
+        
 
 
 class InterfazProcesadorImagenes(tk.Tk):
@@ -317,6 +340,7 @@ class InterfazProcesadorImagenes(tk.Tk):
         ttk.Button(panel_botones, text="Agregar Ruido Sal y Pimienta", command=self.agregar_ruido_sal_pimienta).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Agregar Ruido Gaussiano", command=self.agregar_ruido_gaussiano).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro Pesado", command=self.aplicar_filtro_pesado).pack(fill=tk.X, padx=15, pady=5)
+        ttk.Button(panel_botones, text="Aplicar Filtro de Robert (bordes)", command=self.aplicar_filtro_Robert).pack(fill=tk.X, padx=15, pady=5)
         
         ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
         
@@ -497,6 +521,27 @@ class InterfazProcesadorImagenes(tk.Tk):
             return
         
         imagen_filtrada = self.filtro.filtro_pesado()
+        if imagen_filtrada is not None:
+            self.imagen_actual = imagen_filtrada
+            
+            # Mostrar imagen original con ruido y su versión filtrada
+            for widget in self.panel_ruido.winfo_children():
+                widget.destroy()
+            
+            frame_ruido = ttk.Frame(self.panel_ruido)
+            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            
+            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada", 0, 1)
+            
+            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+    
+    #metodo que utiliza el boton 
+    def aplicar_filtro_Robert(self):
+        #banderilla
+        
+        self.filtro.imagen_original = self.imagen_actual 
+        imagen_filtrada = self.filtro.filtro_Robert()
         if imagen_filtrada is not None:
             self.imagen_actual = imagen_filtrada
             
