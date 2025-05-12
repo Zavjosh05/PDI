@@ -364,14 +364,14 @@ class InterfazProcesadorImagenes(tk.Tk):
         ttk.Button(panel_botones, text="Agregar Ruido Sal y Pimienta", command=self.agregar_ruido_sal_pimienta).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Agregar Ruido Gaussiano", command=self.agregar_ruido_gaussiano).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro Pesado", command=self.aplicar_filtro_pesado).pack(fill=tk.X, padx=15, pady=5)
-        ttk.Button(panel_botones, text="Aplicar Filtro de Robert (bordes)", command=self.aplicar_filtro_Robert).pack(fill=tk.X, padx=15, pady=5)
+       
 
         ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
         
         # Sección de segmentación
         ttk.Label(panel_botones, text="Segmentación", font=("Arial", 12, "bold")).pack(pady=(10, 5), padx=5)
         ttk.Button(panel_botones, text="Segmentación por método de otsu", command=self.aplicar_filtro_otsu).pack(fill=tk.X, padx=15, pady=5)
-
+        ttk.Button(panel_botones, text="Aplicar Filtro de Robert (bordes)", command=self.aplicar_filtro_Robert).pack(fill=tk.X, padx=15, pady=10)
         ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
 
         # Botón para guardar la imagen actual con más destaque
@@ -585,7 +585,7 @@ class InterfazProcesadorImagenes(tk.Tk):
             self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen convertida A gris ", 0, 0)
             self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtro robert (Bordes)", 0, 1)
             
-            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+            self.notebook.select(3)  # Cambiar a la pestaña de segmentaciones
 
     def aplicar_filtro_otsu(self):
         self.filtro.imagen_original = self.imagen_actual 
