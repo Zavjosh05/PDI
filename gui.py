@@ -184,6 +184,27 @@ class Filtro:
             print("obtencion de bordes exitosas")
         return imagen_bordes_roberts
         
+    def filtro_otsu(self):
+        if self.imagen_original is None:
+            print("Error en la lectura de imagen segmentación otsu")
+            return None
+        else: 
+            print("lectura de imagen exitosa imagen segmentación otsu")
+        
+        #asegurar la conversion a escala de grises
+        self.imagen_original = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
+
+        # Método de Otsu
+        _, umbral_otsu = cv2.threshold(self.imagen_original, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # Mostrar la imagen segmentada
+        '''plt.figure(figsize=(6, 6))
+        plt.imshow(umbral_otsu, cmap='gray')
+        plt.title('Segmentación - Método de Otsu')
+        plt.axis('off')
+        plt.show()'''
+        if(umbral_otsu.any()): 
+            print("obtencion de umbral otsu exitosa")
+        return umbral_otsu
 
 
 class InterfazProcesadorImagenes(tk.Tk):
@@ -232,6 +253,9 @@ class InterfazProcesadorImagenes(tk.Tk):
         
         tab_ruido = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(tab_ruido, text="Ruido y Filtros")
+
+        tab_ruido = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(tab_ruido, text="Segmentación")
         
         tab_histogramas = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(tab_histogramas, text="Histogramas")
@@ -341,9 +365,15 @@ class InterfazProcesadorImagenes(tk.Tk):
         ttk.Button(panel_botones, text="Agregar Ruido Gaussiano", command=self.agregar_ruido_gaussiano).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro Pesado", command=self.aplicar_filtro_pesado).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro de Robert (bordes)", command=self.aplicar_filtro_Robert).pack(fill=tk.X, padx=15, pady=5)
-        
+
         ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
         
+        # Sección de segmentación
+        ttk.Label(panel_botones, text="Segmentación", font=("Arial", 12, "bold")).pack(pady=(10, 5), padx=5)
+        ttk.Button(panel_botones, text="Segmentación por método de otsu", command=self.aplicar_filtro_otsu).pack(fill=tk.X, padx=15, pady=5)
+
+        ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
+
         # Botón para guardar la imagen actual con más destaque
         ttk.Label(panel_botones, text="Guardar Resultado", font=("Arial", 12, "bold")).pack(pady=(10, 5), padx=5)
         ttk.Button(panel_botones, text="Guardar Imagen Actual", 
@@ -462,7 +492,7 @@ class InterfazProcesadorImagenes(tk.Tk):
             canvas_color.draw()
             canvas_color.get_tk_widget().grid(row=0, column=1, padx=10, pady=10)
             
-            self.notebook.select(3)  # Cambiar a la pestaña de histogramas
+            self.notebook.select(4)  # Cambiar a la pestaña de histogramas
     
     def aplicar_operaciones_logicas(self):
         if self.ruta_imagen1_logica is None or self.ruta_imagen2_logica is None:
@@ -556,6 +586,24 @@ class InterfazProcesadorImagenes(tk.Tk):
             self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtro robert (Bordes)", 0, 1)
             
             self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+
+    def aplicar_filtro_otsu(self):
+        self.filtro.imagen_original = self.imagen_actual 
+        imagen_filtrada = self.filtro.filtro_otsu()
+        if imagen_filtrada is not None:
+            self.imagen_actual = imagen_filtrada
+            
+            # Mostrar imagen original y su versión filtrada
+            for widget in self.panel_ruido.winfo_children():
+                widget.destroy()
+            
+            frame_ruido = ttk.Frame(self.panel_ruido)
+            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            
+            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen convertida A gris ", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Segmentos obtenidos con otsu (umbralización)", 0, 1)
+            
+            self.notebook.select(3)  # Cambiar a la pestaña de segmentación
     
     def mostrar_imagenes_logicas(self):
         # Mostrar las imágenes seleccionadas para operaciones lógicas
