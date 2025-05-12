@@ -552,8 +552,8 @@ class InterfazProcesadorImagenes(tk.Tk):
             frame_ruido = ttk.Frame(self.panel_ruido)
             frame_ruido.pack(fill=tk.BOTH, expand=True)
             
-            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
-            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada", 0, 1)
+            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen convertida A gris ", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtro robert (Bordes)", 0, 1)
             
             self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
     
