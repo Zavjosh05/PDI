@@ -1,3 +1,6 @@
+import numpy as np
+import cv2
+
 class Ruido:
     def __init__(self, imagen=None):
         self.imagen_original = imagen
