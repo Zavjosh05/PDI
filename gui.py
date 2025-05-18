@@ -1,4 +1,6 @@
 import tkinter as tk
+from OperacionesLogicas2 import * 
+from Ruido import * 
 from tkinter import filedialog, ttk
 import cv2
 import numpy as np
@@ -93,62 +95,8 @@ class ProcesadorImagen:
         return self.ecualizada_hipercubica
 
 
-class OperacionesLogicas:
-    def __init__(self, imagen1=None, imagen2=None):
-        self.imagen1 = imagen1
-        self.imagen2 = imagen2
-        self.imagen_and = None
-        self.imagen_or = None
-        self.imagen_xor = None
-
-    def cargar_imagenes(self, ruta1, ruta2):
-        self.imagen1 = cv2.imread(ruta1)
-        self.imagen2 = cv2.imread(ruta2)
-        if self.imagen1 is not None and self.imagen2 is not None:
-            self.imagen1 = cv2.resize(self.imagen1, (300, 300))
-            self.imagen2 = cv2.resize(self.imagen2, (300, 300))
-        return self.imagen1, self.imagen2
-
-    def aplicar_operaciones_logicas(self):
-        if self.imagen1 is None or self.imagen2 is None:
-            return None, None, None
-        self.imagen_and = cv2.bitwise_and(self.imagen1, self.imagen2)
-        self.imagen_or = cv2.bitwise_or(self.imagen1, self.imagen2)
-        self.imagen_xor = cv2.bitwise_xor(self.imagen1, self.imagen2)
-        return self.imagen_and, self.imagen_or, self.imagen_xor
 
 
-class Ruido:
-    def __init__(self, imagen=None):
-        self.imagen_original = imagen
-
-    def cargar_imagen(self, ruta):
-        self.imagen_original = cv2.imread(ruta)
-        if self.imagen_original is not None:
-            self.imagen_original = cv2.resize(self.imagen_original, (400, 400))
-        return self.imagen_original
-
-    def agregar_ruido_sal_pimienta(self, cantidad=0.05):
-        if self.imagen_original is None:
-            return None
-        salida = np.copy(self.imagen_original)
-        num_pixeles = int(cantidad * salida.shape[0] * salida.shape[1])
-        # Añadir ruido sal
-        coords_x = np.random.randint(0, salida.shape[0], num_pixeles)
-        coords_y = np.random.randint(0, salida.shape[1], num_pixeles)
-        salida[coords_x, coords_y] = 255
-        # Añadir ruido pimienta
-        coords_x = np.random.randint(0, salida.shape[0], num_pixeles)
-        coords_y = np.random.randint(0, salida.shape[1], num_pixeles)
-        salida[coords_x, coords_y] = 0
-        return salida
-
-    def agregar_ruido_gaussiano(self, media=0, sigma=25):
-        if self.imagen_original is None:
-            return None
-        gauss = np.random.normal(media, sigma, self.imagen_original.shape).astype(np.uint8)
-        salida = cv2.add(self.imagen_original, gauss)
-        return salida
 
 
 class Filtro:
@@ -214,7 +162,8 @@ class InterfazProcesadorImagenes(tk.Tk):
         self.geometry("1200x800")
         
         self.procesador = ProcesadorImagen()
-        self.operaciones_logicas = OperacionesLogicas()
+        self.operaciones_logicas = OperacionesLogicas2()
+     
         self.ruido = Ruido()
         self.filtro = Filtro()
         
@@ -356,9 +305,8 @@ class InterfazProcesadorImagenes(tk.Tk):
         # Sección de operaciones lógicas
         ttk.Label(panel_botones, text="Operaciones Lógicas", font=("Arial", 12, "bold")).pack(pady=(10, 5), padx=5)
         ttk.Button(panel_botones, text="Aplicar Operaciones Lógicas", command=self.aplicar_operaciones_logicas).pack(fill=tk.X, padx=15, pady=5)
-        
         ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
-        
+         
         # Sección de ruido y filtros
         ttk.Label(panel_botones, text="Ruido y Filtros", font=("Arial", 12, "bold")).pack(pady=(10, 5), padx=5)
         ttk.Button(panel_botones, text="Agregar Ruido Sal y Pimienta", command=self.agregar_ruido_sal_pimienta).pack(fill=tk.X, padx=15, pady=5)
@@ -493,6 +441,34 @@ class InterfazProcesadorImagenes(tk.Tk):
             canvas_color.get_tk_widget().grid(row=0, column=1, padx=10, pady=10)
             
             self.notebook.select(4)  # Cambiar a la pestaña de histogramas
+    
+    def aplicar_operaciones_logicas2(self):
+        if self.ruta_imagen1_logica is None or self.ruta_imagen2_logica is None:
+            self.mostrar_mensaje("Por favor cargue ambas imágenes para operaciones lógicas")
+            return
+        
+        and_img, or_img, xor_img = self.operaciones_logicas.aplicar_operaciones_logicas()
+        
+        if and_img is not None and or_img is not None and xor_img is not None:
+            # Limpiar panel
+            for widget in self.panel_logicas.winfo_children():
+                widget.destroy()
+            
+            # Crear un marco para contener las imágenes y resultados
+            frame_logicas = ttk.Frame(self.panel_logicas)
+            frame_logicas.pack(fill=tk.BOTH, expand=True)
+            
+            # Mostrar imágenes originales
+            self.mostrar_imagen_frame(frame_logicas, self.operaciones_logicas.imagen1, "Imagen 1", 0, 0)
+            self.mostrar_imagen_frame(frame_logicas, self.operaciones_logicas.imagen2, "Imagen 2", 0, 1)
+            
+            # Mostrar resultados de operaciones lógicas
+            self.mostrar_imagen_frame(frame_logicas, and_img, "AND", 1, 0)
+            self.mostrar_imagen_frame(frame_logicas, or_img, "OR", 1, 1)
+            self.mostrar_imagen_frame(frame_logicas, xor_img, "XOR", 1, 2)
+            
+            self.notebook.select(1)  # Cambiar 
+        return
     
     def aplicar_operaciones_logicas(self):
         if self.ruta_imagen1_logica is None or self.ruta_imagen2_logica is None:
