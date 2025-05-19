@@ -386,8 +386,28 @@ class InterfazProcesadorImagenes(tk.Tk):
             self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
 
     def aplicar_filtro_promediador(self):
-        print("shouldnt have called ")
-        return
+       
+        if self.filtro.imagen_original is None:
+            self.mostrar_mensaje("Por favor agregue ruido a una imagen primero")
+            return
+        
+        imagen_filtrada  = self.filtro.filtro_promediador()   
+        if imagen_filtrada is not None:
+            self.imagen_actual = imagen_filtrada
+            
+            # Mostrar imagen original con ruido y su versión filtrada
+            for widget in self.panel_ruido.winfo_children():
+                widget.destroy()
+            
+            frame_ruido = ttk.Frame(self.panel_ruido)
+            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            
+            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada Promediador", 0, 1)
+            
+            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+        
+
     
 
     def aplicar_filtro_pesado(self):
