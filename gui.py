@@ -176,13 +176,15 @@ class InterfazProcesadorImagenes(tk.Tk):
         ttk.Button(panel_botones, text="Agregar Ruido Gaussiano", command=self.agregar_ruido_gaussiano).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro promediador", command=self.aplicar_filtro_promediador).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro Pesado", command=self.aplicar_filtro_pesado).pack(fill=tk.X, padx=15, pady=5)
-        ttk.Button(panel_botones, text="Aplicar Filtro de Robert", command=self.aplicar_filtro_Robert).pack(fill=tk.X, padx=15, pady=10)
-
+        ttk.Button(panel_botones, text="Aplicar Filtro Gaussiano", command=self.aplicar_filtro_gaussiano).pack(fill=tk.X, padx=15, pady=5)
+        ttk.Button(panel_botones, text="Aplicar Filtro Mediana", command=self.aplicar_filtro_mediana).pack(fill=tk.X, padx=15, pady=5)
+        ttk.Button(panel_botones, text="Aplicar Filtro Moda", command=self.aplicar_filtro_Moda).pack(fill=tk.X, padx=15, pady=5)
 
         ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
-        
+
         # Sección de segmentación
-        ttk.Label(panel_botones, text="Segmentación", font=("Arial", 12, "bold")).pack(pady=(10, 5), padx=5)
+        ttk.Label(panel_botones, text=" Filtros de Segmentación y Umbrales", font=("Arial", 12, "bold")).pack(pady=(10, 5), padx=5)
+        ttk.Button(panel_botones, text="Aplicar Filtro de Robert", command=self.aplicar_filtro_Robert).pack(fill=tk.X, padx=15, pady=10)
         ttk.Button(panel_botones, text="Segmentación por método de otsu", command=self.aplicar_filtro_otsu).pack(fill=tk.X, padx=15, pady=5)
         ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
 
@@ -406,9 +408,6 @@ class InterfazProcesadorImagenes(tk.Tk):
             self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada Promediador", 0, 1)
             
             self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
-        
-
-    
 
     def aplicar_filtro_pesado(self):
         if self.filtro.imagen_original is None:
@@ -430,6 +429,75 @@ class InterfazProcesadorImagenes(tk.Tk):
             self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada", 0, 1)
             
             self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+
+    def aplicar_filtro_gaussiano(self):
+       
+        if self.filtro.imagen_original is None:
+            self.mostrar_mensaje("Por favor agregue ruido a una imagen primero")
+            return
+        
+        imagen_filtrada  = self.filtro.filtro_gaussiano()
+        if imagen_filtrada is not None:
+            self.imagen_actual = imagen_filtrada
+            
+            # Mostrar imagen original con ruido y su versión filtrada
+            for widget in self.panel_ruido.winfo_children():
+                widget.destroy()
+            
+            frame_ruido = ttk.Frame(self.panel_ruido)
+            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            
+            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada F.Gaussiano", 0, 1)
+            
+            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+
+    def aplicar_filtro_mediana(self):
+       
+        if self.filtro.imagen_original is None:
+            self.mostrar_mensaje("Por favor agregue ruido a una imagen primero")
+            return
+        
+        imagen_filtrada  = self.filtro.filtro_mediana()
+        if imagen_filtrada is not None:
+            self.imagen_actual = imagen_filtrada
+            
+            # Mostrar imagen original con ruido y su versión filtrada
+            for widget in self.panel_ruido.winfo_children():
+                widget.destroy()
+            
+            frame_ruido = ttk.Frame(self.panel_ruido)
+            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            
+            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada F. Mediana", 0, 1)
+            
+            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+
+    def aplicar_filtro_Moda(self):
+        
+        self.mostrar_mensaje("ADVETENCIA: El proceso se tardara un poco")
+        if self.filtro.imagen_original is None:
+            self.mostrar_mensaje("Por favor agregue ruido a una imagen primero")
+            return
+        
+        imagen_filtrada  = self.filtro.filtro_moda()
+        if imagen_filtrada is not None:
+            self.imagen_actual = imagen_filtrada
+            
+            # Mostrar imagen original con ruido y su versión filtrada
+            for widget in self.panel_ruido.winfo_children():
+                widget.destroy()
+            
+            frame_ruido = ttk.Frame(self.panel_ruido)
+            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            
+            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada F. Moda", 0, 1)
+            
+            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+        
+    
     
     #metodo que utiliza el boton 
     def aplicar_filtro_Robert(self):
@@ -594,7 +662,8 @@ class InterfazProcesadorImagenes(tk.Tk):
     def mostrar_mensaje(self, mensaje):
         from tkinter import messagebox
         messagebox.showinfo("Información", mensaje)
-
+    
+ 
 
 if __name__ == "__main__":
     app = InterfazProcesadorImagenes()
