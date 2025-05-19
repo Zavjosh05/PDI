@@ -13,6 +13,7 @@ import os
 from OperacionesLogicas2 import * 
 from Ruido import * 
 from Filtros import *
+from FiltrosSegmentacion import * 
 from ProcesadorImagen import * 
 
 
@@ -27,6 +28,7 @@ class InterfazProcesadorImagenes(tk.Tk):
      
         self.ruido = Ruido()
         self.filtro = Filtros()
+        self.filtros_segmentacion = FiltrosSegmentacion()
         
         self.imagen_actual = None
         self.ruta_imagen_actual = None
@@ -172,6 +174,7 @@ class InterfazProcesadorImagenes(tk.Tk):
         ttk.Label(panel_botones, text="Ruido y Filtros", font=("Arial", 12, "bold")).pack(pady=(10, 5), padx=5)
         ttk.Button(panel_botones, text="Agregar Ruido Sal y Pimienta", command=self.agregar_ruido_sal_pimienta).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Agregar Ruido Gaussiano", command=self.agregar_ruido_gaussiano).pack(fill=tk.X, padx=15, pady=5)
+        ttk.Button(panel_botones, text="Aplicar Filtro promediador", command=self.aplicar_filtro_promediador).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro Pesado", command=self.aplicar_filtro_pesado).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro de Robert", command=self.aplicar_filtro_Robert).pack(fill=tk.X, padx=15, pady=10)
 
@@ -381,7 +384,12 @@ class InterfazProcesadorImagenes(tk.Tk):
             self.mostrar_imagen(self.panel_ruido, imagen_ruido, "Imagen con Ruido Gaussiano")
             self.filtro.imagen_original = imagen_ruido  # Preparar para aplicar filtro
             self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+
+    def aplicar_filtro_promediador(self):
+        print("shouldnt have called ")
+        return
     
+
     def aplicar_filtro_pesado(self):
         if self.filtro.imagen_original is None:
             self.mostrar_mensaje("Por favor agregue ruido a una imagen primero")
@@ -407,8 +415,8 @@ class InterfazProcesadorImagenes(tk.Tk):
     def aplicar_filtro_Robert(self):
         #banderilla
         
-        self.filtro.imagen_original = self.imagen_actual 
-        imagen_filtrada = self.filtro.filtro_Robert()
+        self.filtros_segmentacion.imagen_original = self.imagen_actual 
+        imagen_filtrada = self.filtros_segmentacion.filtro_Robert()
         if imagen_filtrada is not None:
             self.imagen_actual = imagen_filtrada
             
@@ -419,14 +427,14 @@ class InterfazProcesadorImagenes(tk.Tk):
             frame_ruido = ttk.Frame(self.panel_ruido)
             frame_ruido.pack(fill=tk.BOTH, expand=True)
             
-            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen convertida A gris ", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, self.filtros_segmentacion.imagen_original, "Imagen convertida A gris ", 0, 0)
             self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtro robert (Bordes)", 0, 1)
             
             self.notebook.select(2)  # Cambiar a la pestaña de segmentaciones
 
     def aplicar_filtro_otsu(self):
-        self.filtro.imagen_original = self.imagen_actual 
-        imagen_filtrada = self.filtro.filtro_otsu()
+        self.filtros_segmentacion.imagen_original = self.imagen_actual 
+        imagen_filtrada = self.filtros_segmentacion.filtro_otsu()
         if imagen_filtrada is not None:
             self.imagen_actual = imagen_filtrada
             
@@ -437,7 +445,7 @@ class InterfazProcesadorImagenes(tk.Tk):
             frame_ruido = ttk.Frame(self.panel_ruido)
             frame_ruido.pack(fill=tk.BOTH, expand=True)
             
-            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen convertida A gris ", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, self.filtros_segmentacion.imagen_original, "Imagen convertida A gris ", 0, 0)
             self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Segmentos obtenidos con otsu (umbralización)", 0, 1)
             
             self.notebook.select(3)  # Cambiar a la pestaña de segmentación
