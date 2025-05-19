@@ -16,14 +16,20 @@ class Filtros:
             print("lectura de imagen exitosa imagen filtro promediador")
         imagen_filtrada = cv2.blur(self.imagen_original, (5,5))
         return imagen_filtrada      
-
-        
-
+    
     def filtro_pesado(self):
         if self.imagen_original is None:
             return None
         kernel = np.array([[1, 1, 1], [1, 5, 1], [1, 1, 1]]) / 13
         imagen_promediador_pesado = cv2.filter2D(self.imagen_original, -1, kernel)
         return imagen_promediador_pesado
+    
+    def filtro_gaussiano(self):
+        print("aplicando filtro gaussiano")
+        if self.imagen_original is None:
+            return None
+        imagen_gaussiana = cv2.GaussianBlur(self.imagen_original, (5,5), 1)
+        return imagen_gaussiana
+    
     
     
