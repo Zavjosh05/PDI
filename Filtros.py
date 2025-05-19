@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from scipy import stats 
 
 #En esta claser iran los filtros de pasa altas y pasa bajas
 class Filtros:
@@ -31,5 +32,33 @@ class Filtros:
         imagen_gaussiana = cv2.GaussianBlur(self.imagen_original, (5,5), 1)
         return imagen_gaussiana
     
+    def filtro_mediana(self):
+        print("aplicando filtro mediana")
+        if self.imagen_original is None:
+            return None
+        imagen_mediana = cv2.medianBlur(self.imagen_original,5)
+        return imagen_mediana
+    
+    def filtro_moda(self, kernel_size=3):
+        print("aplicando filtro Moda")
+
+        if self.imagen_original is None:
+            return None 
+        imagen = self.imagen_original
+        salida = np.copy(imagen)
+        h, w, c = imagen.shape
+        pad = kernel_size // 2
+
+        # Rellenar por canal
+        imagen_padded = np.pad(imagen, ((pad, pad), (pad, pad), (0, 0)), mode='constant', constant_values=0)
+
+        for i in range(h):
+            for j in range(w):
+                for ch in range(c):  # Aplicar por canal
+                    window = imagen_padded[i:i + kernel_size, j:j + kernel_size, ch]
+                    moda = stats.mode(window, axis=None, keepdims=False).mode
+                    salida[i, j, ch] = moda
+
+        return salida
     
     
