@@ -179,7 +179,8 @@ class InterfazProcesadorImagenes(tk.Tk):
         ttk.Button(panel_botones, text="Aplicar Filtro Gaussiano", command=self.aplicar_filtro_gaussiano).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro Mediana", command=self.aplicar_filtro_mediana).pack(fill=tk.X, padx=15, pady=5)
         ttk.Button(panel_botones, text="Aplicar Filtro Moda", command=self.aplicar_filtro_Moda).pack(fill=tk.X, padx=15, pady=5)
-
+        ttk.Button(panel_botones, text="Aplicar Filtro Bilateral", command=self.aplicar_filtro_Bilateral).pack(fill=tk.X, padx=15, pady=5)
+        
         ttk.Separator(panel_botones, orient='horizontal').pack(fill=tk.X, padx=10, pady=15)
 
         # Sección de segmentación
@@ -494,6 +495,28 @@ class InterfazProcesadorImagenes(tk.Tk):
             
             self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
             self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada F. Moda", 0, 1)
+            
+            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+    
+    def aplicar_filtro_Bilateral(self):
+        
+        if self.filtro.imagen_original is None:
+            self.mostrar_mensaje("Por favor agregue ruido a una imagen primero")
+            return
+        
+        imagen_filtrada  = self.filtro.filtro_bilateral()
+        if imagen_filtrada is not None:
+            self.imagen_actual = imagen_filtrada
+            
+            # Mostrar imagen original con ruido y su versión filtrada
+            for widget in self.panel_ruido.winfo_children():
+                widget.destroy()
+            
+            frame_ruido = ttk.Frame(self.panel_ruido)
+            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            
+            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
+            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada F. Bilateral", 0, 1)
             
             self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
         
