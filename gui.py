@@ -119,6 +119,22 @@ class InterfazProcesadorImagenes(tk.Tk):
         canvas_ruido.pack(side="left", fill="both", expand=True)
         scrollbar_ruido.pack(side="right", fill="y")
         
+        # Panel segmentacion con scroll
+        frame_scroll_segmentacion = ttk.Frame(tab_segmentacion)
+        frame_scroll_segmentacion.pack(fill=tk.BOTH, expand=True)
+        
+        canvas_segmentacion = tk.Canvas(frame_scroll_segmentacion)
+        scrollbar_segmentacion = ttk.Scrollbar(frame_scroll_segmentacion, orient="vertical", command=canvas_segmentacion.yview)
+        self.panel_segmentacion = ttk.Frame(canvas_segmentacion)
+        
+        self.panel_segmentacion.bind("<Configure>", lambda e: canvas_segmentacion.configure(scrollregion=canvas_segmentacion.bbox("all")))
+        canvas_segmentacion.create_window((0, 0), window=self.panel_segmentacion, anchor="nw")
+        canvas_segmentacion.configure(yscrollcommand=scrollbar_segmentacion.set)
+        
+        canvas_segmentacion.pack(side="left", fill="both", expand=True)
+        scrollbar_segmentacion.pack(side="right", fill="y")
+        
+
         # Panel histogramas con scroll
         frame_scroll_histogramas = ttk.Frame(tab_histogramas)
         frame_scroll_histogramas.pack(fill=tk.BOTH, expand=True)
@@ -532,16 +548,16 @@ class InterfazProcesadorImagenes(tk.Tk):
             self.imagen_actual = imagen_filtrada
             
             # Mostrar imagen original con ruido y su versión filtrada
-            for widget in self.panel_ruido.winfo_children():
+            for widget in self.panel_segmentacion.winfo_children():
                 widget.destroy()
             
-            frame_ruido = ttk.Frame(self.panel_ruido)
-            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            frame_segmentacion = ttk.Frame(self.panel_segmentacion)
+            frame_segmentacion.pack(fill=tk.BOTH, expand=True)
             
-            self.mostrar_imagen_frame(frame_ruido, self.filtros_segmentacion.imagen_original, "Imagen convertida A gris ", 0, 0)
-            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtro robert (Bordes)", 0, 1)
+            self.mostrar_imagen_frame(frame_segmentacion, self.filtros_segmentacion.imagen_original, "Imagen convertida A gris ", 0, 0)
+            self.mostrar_imagen_frame(frame_segmentacion, imagen_filtrada, "Imagen Filtro robert (Bordes)", 0, 1)
             
-            self.notebook.select(2)  # Cambiar a la pestaña de segmentaciones
+            self.notebook.select(3)  # Cambiar a la pestaña de segmentaciones
 
     def aplicar_filtro_otsu(self):
         self.filtros_segmentacion.imagen_original = self.imagen_actual 
@@ -550,16 +566,18 @@ class InterfazProcesadorImagenes(tk.Tk):
             self.imagen_actual = imagen_filtrada
             
             # Mostrar imagen original y su versión filtrada
-            for widget in self.panel_ruido.winfo_children():
+            for widget in self.panel_segmentacion.winfo_children():
                 widget.destroy()
             
-            frame_ruido = ttk.Frame(self.panel_ruido)
-            frame_ruido.pack(fill=tk.BOTH, expand=True)
+            frame_segmentacion = ttk.Frame(self.panel_segmentacion)
+            frame_segmentacion.pack(fill=tk.BOTH, expand=True)
             
-            self.mostrar_imagen_frame(frame_ruido, self.filtros_segmentacion.imagen_original, "Imagen convertida A gris ", 0, 0)
-            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Segmentos obtenidos con otsu (umbralización)", 0, 1)
+            self.mostrar_imagen_frame(frame_segmentacion, self.filtros_segmentacion.imagen_original, "Imagen convertida A gris ", 0, 0)
+            self.mostrar_imagen_frame(frame_segmentacion, imagen_filtrada, "Segmentos obtenidos con otsu (umbralización)", 0, 1)
             
             self.notebook.select(3)  # Cambiar a la pestaña de segmentación
+        
+    
     
     def mostrar_imagenes_logicas(self):
         # Mostrar las imágenes seleccionadas para operaciones lógicas
