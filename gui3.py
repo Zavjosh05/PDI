@@ -1,595 +1,623 @@
+# Importación de librerías
 import numpy as np
 import cv2
+
+# Importación de librerías visuales
 import matplotlib.pyplot as plt
-import tkinter as tk
+import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from tkinter import filedialog, ttk
+from tkinter import filedialog, messagebox
 import os
 from PIL import Image, ImageTk
-import sys
 
-from OperacionesLogicas2 import * 
-from Ruido import * 
+# Importación de clases (comentadas para ejemplo - reemplaza con tus imports reales)
+from OperacionesLogicas2 import *
+from Ruido import *
 from Filtros import *
-from FiltrosSegmentacion import * 
-from ProcesadorImagen import * 
+from FiltrosSegmentacion import *
+from ProcesadorImagen import *
+
+# Configuración del tema y apariencia
+ctk.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
+ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 
-class InterfazProcesadorImagenes(tk.Tk):
+class InterfazProcesadorImagenes(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Procesador de Imágenes")
-        self.geometry("1200x800")
-        
+
+        # Configuración de la ventana principal
+        self.title("Procesador Avanzado de Imágenes")
+        self.geometry("1400x900")
+        self.minsize(1200, 800)
+
+        # Configurar grid principal
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        # Variables de instancia (comentadas - reemplaza con tus clases reales)
         self.procesador = ProcesadorImagen()
         self.operaciones_logicas = OperacionesLogicas2()
         self.ruido = Ruido()
         self.filtro = Filtros()
         self.filtros_segmentacion = FiltrosSegmentacion()
-        
+
         self.imagen_actual = None
         self.ruta_imagen_actual = None
         self.ruta_imagen1_logica = None
         self.ruta_imagen2_logica = None
-        self.canvas = None
-        
-        self.configurar_estilos()
+
         self.crear_interfaz()
-    
-    def configurar_estilos(self):
-        self.style = ttk.Style()
-        self.style.configure("TFrame", background="#f0f0f0")
-        self.style.configure("Header.TFrame", background="#2c3e50")
-        self.style.configure("Header.TLabel", background="#2c3e50", foreground="white", font=("Arial", 14, "bold"))
-        self.style.configure("Tab.TFrame", background="white")
-        self.style.configure("TNotebook", background="#f0f0f0", borderwidth=0)
-        self.style.configure("TNotebook.Tab", padding=[10, 5], font=("Arial", 10))
-        self.style.map("TNotebook.Tab", background=[("selected", "#3498db")], foreground=[("selected", "white")])
-        
-        self.style.configure("ToolButton.TButton", font=("Arial", 10), padding=5)
-        self.style.configure("SectionHeader.TLabel", font=("Arial", 12, "bold"), padding=5)
-        self.style.configure("NavButton.TButton", font=("Arial", 10), background="#3498db", foreground="white")
-    
+
     def crear_interfaz(self):
-        self.configure(background="#f0f0f0")
-        
-        header_frame = ttk.Frame(self, style="Header.TFrame")
-        header_frame.pack(side=tk.TOP, fill=tk.X)
-        
-        header_label = ttk.Label(header_frame, text="Procesador de Imágenes", style="Header.TLabel")
-        header_label.pack(pady=10)
-        
-        main_frame = ttk.Frame(self)
-        main_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        
-        left_panel = ttk.Frame(main_frame, width=250)
-        left_panel.pack(side=tk.LEFT, fill=tk.Y)
-        left_panel.pack_propagate(False)
-        
-        right_panel = ttk.Frame(main_frame)
-        right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        self.crear_menu_lateral(left_panel)
-        self.crear_area_trabajo(right_panel)
-    
-    def crear_menu_lateral(self, parent):
-      # Importar el módulo sys para detectar la plataforma
-    
-    # Crear un frame contenedor
-    container = ttk.Frame(parent)
-    container.pack(fill=tk.BOTH, expand=True)
-    
-    # Crear un canvas con scrollbar para el menú lateral
-    canvas = tk.Canvas(container, bg="#f0f0f0", highlightthickness=0)
-    scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-    
-    # Frame que contendrá todos los elementos del menú
-    menu_frame = ttk.Frame(canvas)
-    
-    # Configurar el canvas para que use el scrollbar
-    canvas.configure(yscrollcommand=scrollbar.set)
-    
-    # Empaquetar scrollbar y canvas
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    
-    # Crear una ventana en el canvas que contendrá el frame del menú
-    canvas_window = canvas.create_window((0, 0), window=menu_frame, anchor="nw")
-    
-    # Función para actualizar la región de desplazamiento
-    def update_scrollregion(event):
-        canvas.configure(scrollregion=canvas.bbox("all"))
-    
-    # Función para ajustar el ancho del frame interno al ancho del canvas
-    def on_canvas_configure(event):
-        # Actualizar el ancho de la ventana interna al ancho del canvas
-        canvas.itemconfig(canvas_window, width=event.width)
-    
-    # Vinculamos los eventos de configuración
-    menu_frame.bind("<Configure>", update_scrollregion)
-    canvas.bind("<Configure>", on_canvas_configure)
-    
-    # Función para manejar el desplazamiento con la rueda del ratón
-    def on_mousewheel(event):
-        # Para Windows y macOS
-        if event.num == 5 or event.delta < 0:
-            canvas.yview_scroll(1, "units")
-        elif event.num == 4 or event.delta > 0:
-            canvas.yview_scroll(-1, "units")
-    
-    # Vinculamos el evento de la rueda del ratón solo al canvas
-    if sys.platform.startswith('win'):
-        # Windows
-        canvas.bind("<MouseWheel>", on_mousewheel)
-    else:
-        # Linux y macOS
-        canvas.bind("<Button-4>", on_mousewheel)
-        canvas.bind("<Button-5>", on_mousewheel)
-    
-    # Guardamos referencia para poder destruir los bindings más tarde si es necesario
-    self.sidebar_canvas = canvas
-    
-    sections = [
-        ("Cargar Imágenes", [
-            ("Cargar Imagen Principal", self.cargar_imagen_principal),
-            ("Cargar Imagen 1 (Op. Lógicas)", self.cargar_imagen1_logica),
-            ("Cargar Imagen 2 (Op. Lógicas)", self.cargar_imagen2_logica)
-        ]),
-        ("Procesamiento Básico", [
-            ("Convertir a Escala de Grises", self.convertir_a_grises),
-            ("Aplicar Umbral", self.aplicar_umbral),
-            ("Ecualización Hipercúbica", self.ecualizacion_hipercubica)
-        ]),
-        ("Operaciones Lógicas", [
-            ("Aplicar Operaciones Lógicas", self.aplicar_operaciones_logicas)
-        ]),
-        ("Ruido y Filtros", [
-            ("Agregar Ruido Sal y Pimienta", self.agregar_ruido_sal_pimienta),
-            ("Agregar Ruido Gaussiano", self.agregar_ruido_gaussiano),
-            ("Aplicar Filtro Pesado", self.aplicar_filtro_pesado),
-            ("Aplicar Filtro de Robert", self.aplicar_filtro_Robert)
-        ]),
-        ("Segmentación", [
-            ("Segmentación por método de otsu", self.aplicar_filtro_otsu)
-        ]),
-        ("Histogramas", [
-            ("Calcular Histogramas", self.calcular_histogramas)
-        ])
-    ]
-    
-    # Frames para las secciones
-    for i, (section_name, buttons) in enumerate(sections):
-        section_frame = ttk.Frame(menu_frame, padding=(5, 10))
-        section_frame.pack(fill=tk.X, padx=5, pady=(5 if i > 0 else 0))
-        
-        # Título de sección
-        title_bg = "#3498db"  # Color azul para encabezados
-        title_frame = tk.Frame(section_frame, bg=title_bg)
-        title_frame.pack(fill=tk.X)
-        
-        label = tk.Label(title_frame, text=section_name, bg=title_bg, fg="white", font=("Arial", 11, "bold"))
-        label.pack(fill=tk.X, padx=5, pady=5)
-        
-        # Botones de sección
-        buttons_frame = ttk.Frame(section_frame)
-        buttons_frame.pack(fill=tk.X)
-        
-        for btn_text, btn_command in buttons:
-            btn = tk.Button(buttons_frame, text=btn_text, command=btn_command, 
-                           bg="#f0f0f0", fg="#333333", 
-                           activebackground="#d9d9d9", 
-                           relief=tk.GROOVE, borderwidth=1,
-                           font=("Arial", 9), pady=3)
-            btn.pack(fill=tk.X, padx=5, pady=2)
-    
-    # Botón para guardar imagen
-    save_frame = ttk.Frame(menu_frame, padding=(5, 10))
-    save_frame.pack(fill=tk.X, padx=5, pady=5)
-    
-    save_button = tk.Button(save_frame, text="Guardar Imagen Actual", 
-                           command=self.guardar_imagen_actual,
-                           bg="#27ae60", fg="white", 
-                           activebackground="#219653",
-                           font=("Arial", 10, "bold"),
-                           relief=tk.RAISED, borderwidth=2, pady=5)
-    save_button.pack(fill=tk.X, padx=5, pady=5)
-    
-    def crear_area_trabajo(self, parent):
-        notebook_style = ttk.Style()
-        notebook_style.configure("TNotebook", tabposition='n')
-        
-        self.notebook = ttk.Notebook(parent)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
+        # Panel lateral izquierdo para controles
+        self.sidebar_frame = ctk.CTkScrollableFrame(self, width=280, corner_radius=0)
+        self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
+        self.sidebar_frame.grid_rowconfigure(4, weight=1)
+
+        # Logo y título
+        self.logo_label = ctk.CTkLabel(
+            self.sidebar_frame,
+            text="🖼️ Procesador\nde Imágenes",
+            font=ctk.CTkFont(size=20, weight="bold")
+        )
+        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
+
+        # Sección de carga de imágenes
+        self.crear_seccion_carga()
+
+        # Sección de procesamiento básico
+        self.crear_seccion_procesamiento()
+
+        # Sección de operaciones lógicas
+        self.crear_seccion_logicas()
+
+        # Sección de ruido y filtros
+        self.crear_seccion_ruido()
+
+        # Sección de segmentación
+        self.crear_seccion_segmentacion()
+
+        # Botón de guardar
+        self.crear_seccion_guardar()
+
+        # Panel principal con pestañas
+        self.crear_panel_principal()
+
+        # Configurar el selector de tema
+        self.crear_selector_tema()
+
+    def crear_seccion_carga(self):
+        # Frame para carga de imágenes
+        self.carga_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.carga_frame.grid(row=1, column=0, padx=(20, 20), pady=(20, 10), sticky="ew")
+
+        # Título de la sección
+        self.carga_label = ctk.CTkLabel(
+            self.carga_frame,
+            text="📁 Cargar Imágenes",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.carga_label.grid(row=0, column=0, padx=20, pady=(15, 10))
+
+        # Botones de carga
+        self.btn_cargar_principal = ctk.CTkButton(
+            self.carga_frame,
+            text="🖼️ Imagen Principal",
+            command=self.cargar_imagen_principal,
+            height=35
+        )
+        self.btn_cargar_principal.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
+
+        self.btn_cargar_img1 = ctk.CTkButton(
+            self.carga_frame,
+            text="📷 Imagen 1 (Op. Lógicas)",
+            command=self.cargar_imagen1_logica,
+            height=35,
+            fg_color="transparent",
+            border_width=2
+        )
+        self.btn_cargar_img1.grid(row=2, column=0, padx=20, pady=5, sticky="ew")
+
+        self.btn_cargar_img2 = ctk.CTkButton(
+            self.carga_frame,
+            text="📸 Imagen 2 (Op. Lógicas)",
+            command=self.cargar_imagen2_logica,
+            height=35,
+            fg_color="transparent",
+            border_width=2
+        )
+        self.btn_cargar_img2.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
+
+    def crear_seccion_procesamiento(self):
+        # Frame para procesamiento básico
+        self.procesamiento_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.procesamiento_frame.grid(row=2, column=0, padx=(20, 20), pady=10, sticky="ew")
+
+        # Título de la sección
+        self.procesamiento_label = ctk.CTkLabel(
+            self.procesamiento_frame,
+            text="⚙️ Procesamiento Básico",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.procesamiento_label.grid(row=0, column=0, padx=20, pady=(15, 10))
+
+        # Botones de procesamiento
+        botones_procesamiento = [
+            ("🔳 Escala de Grises", self.convertir_a_grises),
+            ("📊 Aplicar Umbral", self.aplicar_umbral),
+            ("📈 Ecualización Hipercúbica", self.ecualizacion_hipercubica),
+            ("🧮 Operaciones Aritméticas", self.aplicar_operaciones_aritmeticas),
+            ("📊 Calcular Histogramas", self.calcular_histogramas)
+        ]
+
+        for i, (texto, comando) in enumerate(botones_procesamiento):
+            btn = ctk.CTkButton(
+                self.procesamiento_frame,
+                text=texto,
+                command=comando,
+                height=30
+            )
+            btn.grid(row=i + 1, column=0, padx=20, pady=3, sticky="ew")
+
+        # Espaciado final
+        ctk.CTkLabel(self.procesamiento_frame, text="").grid(row=len(botones_procesamiento) + 1, column=0, pady=(0, 15))
+
+    def crear_seccion_logicas(self):
+        # Frame para operaciones lógicas
+        self.logicas_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.logicas_frame.grid(row=3, column=0, padx=(20, 20), pady=10, sticky="ew")
+
+        # Título de la sección
+        self.logicas_label = ctk.CTkLabel(
+            self.logicas_frame,
+            text="🔗 Operaciones Lógicas",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.logicas_label.grid(row=0, column=0, padx=20, pady=(15, 10))
+
+        # Botón de operaciones lógicas
+        self.btn_operaciones_logicas = ctk.CTkButton(
+            self.logicas_frame,
+            text="⚡ Aplicar Operaciones Lógicas",
+            command=self.aplicar_operaciones_logicas,
+            height=35,
+            fg_color=["#3B8ED0", "#1F6AA5"]
+        )
+        self.btn_operaciones_logicas.grid(row=1, column=0, padx=20, pady=(5, 15), sticky="ew")
+
+    def crear_seccion_ruido(self):
+        # Frame para ruido y filtros
+        self.ruido_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.ruido_frame.grid(row=4, column=0, padx=(20, 20), pady=10, sticky="ew")
+
+        # Título de la sección
+        self.ruido_label = ctk.CTkLabel(
+            self.ruido_frame,
+            text="🔊 Ruido y Filtros",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.ruido_label.grid(row=0, column=0, padx=20, pady=(15, 10))
+
+        # Subsección de ruido
+        self.ruido_sub_label = ctk.CTkLabel(
+            self.ruido_frame,
+            text="Agregar Ruido:",
+            font=ctk.CTkFont(size=12, weight="bold")
+        )
+        self.ruido_sub_label.grid(row=1, column=0, padx=20, pady=(5, 5))
+
+        ruido_botones = [
+            ("🧂 Sal y Pimienta", self.agregar_ruido_sal_pimienta),
+            ("📡 Gaussiano", self.agregar_ruido_gaussiano)
+        ]
+
+        for i, (texto, comando) in enumerate(ruido_botones):
+            btn = ctk.CTkButton(
+                self.ruido_frame,
+                text=texto,
+                command=comando,
+                height=30,
+                fg_color=["#FF6B6B", "#CC5555"]
+            )
+            btn.grid(row=i + 2, column=0, padx=20, pady=3, sticky="ew")
+
+        # Subsección de filtros
+        self.filtros_sub_label = ctk.CTkLabel(
+            self.ruido_frame,
+            text="Aplicar Filtros:",
+            font=ctk.CTkFont(size=12, weight="bold")
+        )
+        self.filtros_sub_label.grid(row=len(ruido_botones) + 2, column=0, padx=20, pady=(10, 5))
+
+        filtros_botones = [
+            ("📊 Promediador", self.aplicar_filtro_promediador),
+            ("⚖️ Pesado", self.aplicar_filtro_pesado),
+            ("🌊 Gaussiano", self.aplicar_filtro_gaussiano),
+            ("📊 Mediana", self.aplicar_filtro_mediana),
+            ("📈 Moda", self.aplicar_filtro_Moda)
+        ]
+
+        for i, (texto, comando) in enumerate(filtros_botones):
+            btn = ctk.CTkButton(
+                self.ruido_frame,
+                text=texto,
+                command=comando,
+                height=30,
+                fg_color=["#4ECDC4", "#3BA99C"]
+            )
+            btn.grid(row=i + len(ruido_botones) + 3, column=0, padx=20, pady=3, sticky="ew")
+
+        # Espaciado final
+        ctk.CTkLabel(self.ruido_frame, text="").grid(row=len(ruido_botones) + len(filtros_botones) + 3, column=0,
+                                                     pady=(0, 15))
+
+    def crear_seccion_segmentacion(self):
+        # Frame para segmentación
+        self.segmentacion_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.segmentacion_frame.grid(row=5, column=0, padx=(20, 20), pady=10, sticky="ew")
+
+        # Título de la sección
+        self.segmentacion_label = ctk.CTkLabel(
+            self.segmentacion_frame,
+            text="✂️ Segmentación",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.segmentacion_label.grid(row=0, column=0, padx=20, pady=(15, 10))
+
+        # Botones de segmentación
+        segmentacion_botones = [
+            ("🔍 Filtro de Robert", self.aplicar_filtro_Robert),
+            ("🎯 Método de Otsu", self.aplicar_filtro_otsu)
+        ]
+
+        for i, (texto, comando) in enumerate(segmentacion_botones):
+            btn = ctk.CTkButton(
+                self.segmentacion_frame,
+                text=texto,
+                command=comando,
+                height=35,
+                fg_color=["#9B59B6", "#8E44AD"]
+            )
+            btn.grid(row=i + 1, column=0, padx=20, pady=5, sticky="ew")
+
+        # Espaciado final
+        ctk.CTkLabel(self.segmentacion_frame, text="").grid(row=len(segmentacion_botones) + 1, column=0, pady=(0, 15))
+
+    def crear_seccion_guardar(self):
+        # Frame para guardar
+        self.guardar_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.guardar_frame.grid(row=6, column=0, padx=(20, 20), pady=10, sticky="ew")
+
+        # Título de la sección
+        self.guardar_label = ctk.CTkLabel(
+            self.guardar_frame,
+            text="💾 Guardar Resultado",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.guardar_label.grid(row=0, column=0, padx=20, pady=(15, 10))
+
+        # Botón de guardar
+        self.btn_guardar = ctk.CTkButton(
+            self.guardar_frame,
+            text="💾 Guardar Imagen Actual",
+            command=self.guardar_imagen_actual,
+            height=40,
+            fg_color=["#27AE60", "#229954"],
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        self.btn_guardar.grid(row=1, column=0, padx=20, pady=(5, 15), sticky="ew")
+
+    def crear_panel_principal(self):
+        # Frame principal para el contenido
+        self.main_frame = ctk.CTkFrame(self, corner_radius=0)
+        self.main_frame.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+
+        # Configurar grid del frame principal
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        self.main_frame.grid_rowconfigure(1, weight=1)
+
+        # Título del panel principal
+        self.main_label = ctk.CTkLabel(
+            self.main_frame,
+            text="Área de Visualización",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        self.main_label.grid(row=0, column=0, padx=20, pady=(20, 10))
+
+        # Tabview para las diferentes pestañas
+        self.tabview = ctk.CTkTabview(self.main_frame, width=250)
+        self.tabview.grid(row=1, column=0, padx=20, pady=(10, 20), sticky="nsew")
+
         # Crear pestañas
-        self.tabs = {}
-        tab_names = ["Procesamiento Básico", "Operaciones Lógicas", "Ruido y Filtros", "Segmentación", "Histogramas"]
-        
-        for tab_name in tab_names:
-            tab = ttk.Frame(self.notebook)
-            self.notebook.add(tab, text=tab_name)
-            self.tabs[tab_name] = tab
-            
-            # Área de visualización para cada pestaña
-            display_frame = ttk.Frame(tab)
-            display_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-            
-            # Configurar un canvas para scroll
-            canvas = tk.Canvas(display_frame, bg="white")
-            scrollbar = ttk.Scrollbar(display_frame, orient="vertical", command=canvas.yview)
-            content_frame = ttk.Frame(canvas)
-            
-            content_frame.bind("<Configure>", lambda e, canvas=canvas: canvas.configure(scrollregion=canvas.bbox("all")))
-            window_id = canvas.create_window((0, 0), window=content_frame, anchor="nw")
-            
-            # Asegurar que el contenido se expande con el canvas
-            def on_canvas_configure(event, canvas=canvas, window_id=window_id):
-                canvas.itemconfig(window_id, width=event.width)
-            
-            canvas.bind("<Configure>", on_canvas_configure)
-            canvas.configure(yscrollcommand=scrollbar.set)
-            
-            canvas.pack(side="left", fill="both", expand=True)
-            scrollbar.pack(side="right", fill="y")
-            
-            # Guardar referencia a los frames donde se mostrarán las imágenes
-            setattr(self, f"panel_{tab_name.lower().replace(' ', '_')}", content_frame)
-    
+        self.tab_basico = self.tabview.add("🔧 Básico")
+        self.tab_logicas = self.tabview.add("🔗 Lógicas")
+        self.tab_ruido = self.tabview.add("🔊 Ruido/Filtros")
+        self.tab_segmentacion = self.tabview.add("✂️ Segmentación")
+        self.tab_histogramas = self.tabview.add("📊 Histogramas")
+
+        # Configurar cada pestaña como scrollable
+        self.configurar_pestanas()
+
+    def configurar_pestanas(self):
+        # Configurar cada pestaña con scroll
+        pestanas = [
+            (self.tab_basico, "panel_basico"),
+            (self.tab_logicas, "panel_logicas"),
+            (self.tab_ruido, "panel_ruido"),
+            (self.tab_segmentacion, "panel_segmentacion"),
+            (self.tab_histogramas, "panel_histogramas")
+        ]
+
+        for tab, nombre_panel in pestanas:
+            # Crear frame scrollable para cada pestaña
+            panel = ctk.CTkScrollableFrame(tab)
+            panel.pack(fill="both", expand=True, padx=10, pady=10)
+            setattr(self, nombre_panel, panel)
+
+    def crear_selector_tema(self):
+        # Frame para selector de tema
+        self.tema_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.tema_frame.grid(row=7, column=0, padx=(20, 20), pady=10, sticky="ew")
+
+        # Título
+        self.tema_label = ctk.CTkLabel(
+            self.tema_frame,
+            text="🎨 Tema",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.tema_label.grid(row=0, column=0, padx=20, pady=(15, 10))
+
+        # Selector de tema
+        self.tema_optionmenu = ctk.CTkOptionMenu(
+            self.tema_frame,
+            values=["Dark", "Light", "System"],
+            command=self.cambiar_tema
+        )
+        self.tema_optionmenu.grid(row=1, column=0, padx=20, pady=(5, 15), sticky="ew")
+
+    def cambiar_tema(self, nuevo_tema):
+        ctk.set_appearance_mode(nuevo_tema)
+
+    # Métodos de funcionalidad (placeholders - implementa según tus clases)
     def cargar_imagen_principal(self):
-        ruta = filedialog.askopenfilename(filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp")])
+        ruta = filedialog.askopenfilename(
+            title="Seleccionar imagen principal",
+            filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp *.tiff")]
+        )
         if ruta:
             self.ruta_imagen_actual = ruta
-            imagen = self.procesador.cargar_imagen(ruta)
-            self.ruido.cargar_imagen(ruta)
-            if imagen is not None:
-                self.imagen_actual = imagen
-                self.mostrar_imagen(self.panel_procesamiento_básico, imagen, "Imagen Original")
-                self.notebook.select(0)
-    
+            try:
+                # Aquí usarías tu clase ProcesadorImagen
+                # imagen = self.procesador.cargar_imagen(ruta)
+                # self.ruido.cargar_imagen(ruta)
+
+                # Por ahora, cargar con OpenCV
+                imagen = cv2.imread(ruta)
+                if imagen is not None:
+                    self.imagen_actual = imagen
+                    self.mostrar_imagen(self.panel_basico, imagen, "Imagen Original")
+                    self.tabview.set("🔧 Básico")
+                    self.mostrar_mensaje("✅ Imagen cargada exitosamente")
+                else:
+                    self.mostrar_mensaje("❌ Error al cargar la imagen")
+            except Exception as e:
+                self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
     def cargar_imagen1_logica(self):
-        ruta = filedialog.askopenfilename(filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp")])
+        ruta = filedialog.askopenfilename(
+            title="Seleccionar primera imagen para operaciones lógicas",
+            filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp *.tiff")]
+        )
         if ruta:
             self.ruta_imagen1_logica = ruta
-            if self.ruta_imagen2_logica:
-                self.operaciones_logicas.cargar_imagenes(self.ruta_imagen1_logica, self.ruta_imagen2_logica)
-                self.mostrar_imagenes_logicas()
-    
+            self.mostrar_mensaje("✅ Primera imagen para operaciones lógicas cargada")
+
     def cargar_imagen2_logica(self):
-        ruta = filedialog.askopenfilename(filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp")])
+        ruta = filedialog.askopenfilename(
+            title="Seleccionar segunda imagen para operaciones lógicas",
+            filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp *.tiff")]
+        )
         if ruta:
             self.ruta_imagen2_logica = ruta
-            if self.ruta_imagen1_logica:
-                self.operaciones_logicas.cargar_imagenes(self.ruta_imagen1_logica, self.ruta_imagen2_logica)
-                self.mostrar_imagenes_logicas()
-
-    def verificar_imagen_cargada(self):
-        if self.procesador.imagen_original is None:
-            self.mostrar_mensaje("Por favor cargue una imagen primero")
-            return False
-        return True
+            self.mostrar_mensaje("✅ Segunda imagen para operaciones lógicas cargada")
 
     def convertir_a_grises(self):
-        if not self.verificar_imagen_cargada():
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
             return
-        imagen_grises = self.procesador.convertir_a_grises()
-        if imagen_grises is not None:
+
+        try:
+            # Convertir a escala de grises
+            if len(self.imagen_actual.shape) == 3:
+                imagen_grises = cv2.cvtColor(self.imagen_actual, cv2.COLOR_BGR2GRAY)
+            else:
+                imagen_grises = self.imagen_actual.copy()
+
             self.imagen_actual = imagen_grises
-            self.mostrar_imagen(self.panel_procesamiento_básico, imagen_grises, "Imagen en Escala de Grises")
-            self.notebook.select(0)
-    
+            self.mostrar_imagen(self.panel_basico, imagen_grises, "Imagen en Escala de Grises")
+            self.tabview.set("🔧 Básico")
+            self.mostrar_mensaje("✅ Conversión a escala de grises completada")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
     def aplicar_umbral(self):
-        if not self.verificar_imagen_cargada():
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
             return
-        imagen_umbral = self.procesador.aplicar_umbral()
-        if imagen_umbral is not None:
+
+        try:
+            # Convertir a escala de grises si es necesario
+            if len(self.imagen_actual.shape) == 3:
+                imagen_gris = cv2.cvtColor(self.imagen_actual, cv2.COLOR_BGR2GRAY)
+            else:
+                imagen_gris = self.imagen_actual.copy()
+
+            # Aplicar umbralización
+            _, imagen_umbral = cv2.threshold(imagen_gris, 127, 255, cv2.THRESH_BINARY)
+
             self.imagen_actual = imagen_umbral
-            self.mostrar_imagen(self.panel_procesamiento_básico, imagen_umbral, "Imagen Umbralizada")
-            self.notebook.select(0)
-    
+            self.mostrar_imagen(self.panel_basico, imagen_umbral, "Imagen Umbralizada")
+            self.tabview.set("🔧 Básico")
+            self.mostrar_mensaje("✅ Umbralización aplicada")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    # Placeholders para otros métodos
     def ecualizacion_hipercubica(self):
-        if not self.verificar_imagen_cargada():
-            return
-        imagen_ecualizada = self.procesador.ecualizacion_hipercubica()
-        if imagen_ecualizada is not None:
-            self.imagen_actual = imagen_ecualizada
-            self.mostrar_imagen(self.panel_procesamiento_básico, imagen_ecualizada, "Ecualización Hipercúbica")
-            self.notebook.select(0)
-    
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
     def aplicar_operaciones_aritmeticas(self):
-        if not self.verificar_imagen_cargada():
-            return
-        
-        suma, resta, multiplicacion = self.procesador.aplicar_operaciones_aritmeticas()
-        
-        for widget in self.panel_procesamiento_básico.winfo_children():
-            widget.destroy()
-        
-        frame = ttk.Frame(self.panel_procesamiento_básico)
-        frame.pack(fill=tk.BOTH, expand=True)
-        
-        if suma is not None:
-            self.mostrar_imagen_frame(frame, suma, "Suma", 0, 0)
-        if resta is not None:
-            self.mostrar_imagen_frame(frame, resta, "Resta", 0, 1)
-        if multiplicacion is not None:
-            self.mostrar_imagen_frame(frame, multiplicacion, "Multiplicación", 0, 2)
-        
-        self.notebook.select(0)
-    
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
     def calcular_histogramas(self):
-        if not self.verificar_imagen_cargada():
-            return
-        
-        fig_gray, fig_color = self.procesador.calcular_histogramas()
-        
-        for widget in self.panel_histogramas.winfo_children():
-            widget.destroy()
-        
-        if fig_gray is not None and fig_color is not None:
-            frame_histogramas = ttk.Frame(self.panel_histogramas)
-            frame_histogramas.pack(fill=tk.BOTH, expand=True)
-            
-            canvas_gray = FigureCanvasTkAgg(fig_gray, master=frame_histogramas)
-            canvas_gray.draw()
-            canvas_gray.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
-            
-            canvas_color = FigureCanvasTkAgg(fig_color, master=frame_histogramas)
-            canvas_color.draw()
-            canvas_color.get_tk_widget().grid(row=0, column=1, padx=10, pady=10)
-            
-            self.notebook.select(4)
-    
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
     def aplicar_operaciones_logicas(self):
-        if self.ruta_imagen1_logica is None or self.ruta_imagen2_logica is None:
-            self.mostrar_mensaje("Por favor cargue ambas imágenes para operaciones lógicas")
-            return
-        
-        and_img, or_img, xor_img = self.operaciones_logicas.aplicar_operaciones_logicas()
-        
-        if and_img is not None and or_img is not None and xor_img is not None:
-            for widget in self.panel_operaciones_lógicas.winfo_children():
-                widget.destroy()
-            
-            frame_logicas = ttk.Frame(self.panel_operaciones_lógicas)
-            frame_logicas.pack(fill=tk.BOTH, expand=True)
-            
-            self.mostrar_imagen_frame(frame_logicas, self.operaciones_logicas.imagen1, "Imagen 1", 0, 0)
-            self.mostrar_imagen_frame(frame_logicas, self.operaciones_logicas.imagen2, "Imagen 2", 0, 1)
-            
-            self.mostrar_imagen_frame(frame_logicas, and_img, "AND", 1, 0)
-            self.mostrar_imagen_frame(frame_logicas, or_img, "OR", 1, 1)
-            self.mostrar_imagen_frame(frame_logicas, xor_img, "XOR", 1, 2)
-            
-            self.notebook.select(1)
-    
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
     def agregar_ruido_sal_pimienta(self):
-        if not self.verificar_imagen_cargada():
-            return
-        
-        imagen_ruido = self.ruido.agregar_ruido_sal_pimienta()
-        if imagen_ruido is not None:
-            self.imagen_actual = imagen_ruido
-            self.mostrar_imagen(self.panel_ruido_y_filtros, imagen_ruido, "Imagen con Ruido Sal y Pimienta")
-            self.filtro.imagen_original = imagen_ruido
-            self.notebook.select(2)
-    
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
     def agregar_ruido_gaussiano(self):
-        if not self.verificar_imagen_cargada():
-            return
-        
-        imagen_ruido = self.ruido.agregar_ruido_gaussiano()
-        if imagen_ruido is not None:
-            self.imagen_actual = imagen_ruido
-<<<<<<< Updated upstream
-            self.mostrar_imagen(self.panel_ruido, imagen_ruido, "Imagen con Ruido Gaussiano")
-            self.filtro.imagen_original = imagen_ruido  # Preparar para aplicar filtro
-            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
+        self.mostrar_mensaje("🔧 Función en desarrollo")
 
     def aplicar_filtro_promediador(self):
-       
-        if self.filtro.imagen_original is None:
-            self.mostrar_mensaje("Por favor agregue ruido a una imagen primero")
-            return
-        
-        imagen_filtrada  = self.filtro.filtro_promediador()   
-        if imagen_filtrada is not None:
-            self.imagen_actual = imagen_filtrada
-            
-            # Mostrar imagen original con ruido y su versión filtrada
-            for widget in self.panel_ruido.winfo_children():
-                widget.destroy()
-            
-            frame_ruido = ttk.Frame(self.panel_ruido)
-            frame_ruido.pack(fill=tk.BOTH, expand=True)
-            
-            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
-            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada Promediador", 0, 1)
-            
-            self.notebook.select(2)  # Cambiar a la pestaña de ruido y filtros
-        
+        self.mostrar_mensaje("🔧 Función en desarrollo")
 
-=======
-            self.mostrar_imagen(self.panel_ruido_y_filtros, imagen_ruido, "Imagen con Ruido Gaussiano")
-            self.filtro.imagen_original = imagen_ruido
-            self.notebook.select(2)
->>>>>>> Stashed changes
-    
     def aplicar_filtro_pesado(self):
-        if not self.verificar_imagen_cargada():
-            return
-        
-        imagen_filtrada = self.filtro.filtro_pesado()
-        if imagen_filtrada is not None:
-            self.imagen_actual = imagen_filtrada
-            
-            for widget in self.panel_ruido_y_filtros.winfo_children():
-                widget.destroy()
-            
-            frame_ruido = ttk.Frame(self.panel_ruido_y_filtros)
-            frame_ruido.pack(fill=tk.BOTH, expand=True)
-            
-            self.mostrar_imagen_frame(frame_ruido, self.filtro.imagen_original, "Imagen con Ruido", 0, 0)
-            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtrada", 0, 1)
-            
-            self.notebook.select(2)
-    
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
+    def aplicar_filtro_gaussiano(self):
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
+    def aplicar_filtro_mediana(self):
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
+    def aplicar_filtro_Moda(self):
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
     def aplicar_filtro_Robert(self):
-        self.filtros_segmentacion.imagen_original = self.imagen_actual 
-        imagen_filtrada = self.filtros_segmentacion.filtro_Robert()
-        if imagen_filtrada is not None:
-            self.imagen_actual = imagen_filtrada
-            
-            for widget in self.panel_ruido_y_filtros.winfo_children():
-                widget.destroy()
-            
-            frame_ruido = ttk.Frame(self.panel_ruido_y_filtros)
-            frame_ruido.pack(fill=tk.BOTH, expand=True)
-            
-            self.mostrar_imagen_frame(frame_ruido, self.filtros_segmentacion.imagen_original, "Imagen convertida A gris", 0, 0)
-            self.mostrar_imagen_frame(frame_ruido, imagen_filtrada, "Imagen Filtro robert (Bordes)", 0, 1)
-            
-            self.notebook.select(2)
+        self.mostrar_mensaje("🔧 Función en desarrollo")
 
     def aplicar_filtro_otsu(self):
-        self.filtros_segmentacion.imagen_original = self.imagen_actual 
-        imagen_filtrada = self.filtros_segmentacion.filtro_otsu()
-        if imagen_filtrada is not None:
-            self.imagen_actual = imagen_filtrada
-            
-            for widget in self.panel_segmentación.winfo_children():
-                widget.destroy()
-            
-            frame_seg = ttk.Frame(self.panel_segmentación)
-            frame_seg.pack(fill=tk.BOTH, expand=True)
-            
-            self.mostrar_imagen_frame(frame_seg, self.filtros_segmentacion.imagen_original, "Imagen convertida A gris", 0, 0)
-            self.mostrar_imagen_frame(frame_seg, imagen_filtrada, "Segmentos obtenidos con otsu", 0, 1)
-            
-            self.notebook.select(3)
-    
-    def mostrar_imagenes_logicas(self):
-        for widget in self.panel_operaciones_lógicas.winfo_children():
-            widget.destroy()
-        
-        frame_logicas = ttk.Frame(self.panel_operaciones_lógicas)
-        frame_logicas.pack(fill=tk.BOTH, expand=True)
-        
-        if self.operaciones_logicas.imagen1 is not None:
-            self.mostrar_imagen_frame(frame_logicas, self.operaciones_logicas.imagen1, "Imagen 1", 0, 0)
-        
-        if self.operaciones_logicas.imagen2 is not None:
-            self.mostrar_imagen_frame(frame_logicas, self.operaciones_logicas.imagen2, "Imagen 2", 0, 1)
-        
-        self.notebook.select(1)
-    
+        self.mostrar_mensaje("🔧 Función en desarrollo")
+
     def guardar_imagen_actual(self):
         if self.imagen_actual is None:
-            self.mostrar_mensaje("No hay imagen para guardar")
+            self.mostrar_mensaje("⚠️ No hay imagen para guardar")
             return
-        
-        ruta = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[
-            ("JPEG", "*.jpg"),
-            ("PNG", "*.png"),
-            ("BMP", "*.bmp"),
-            ("Todos los archivos", "*.*")
-        ])
-        
+
+        ruta = filedialog.asksaveasfilename(
+            title="Guardar imagen",
+            defaultextension=".jpg",
+            filetypes=[
+                ("JPEG", "*.jpg"),
+                ("PNG", "*.png"),
+                ("BMP", "*.bmp"),
+                ("TIFF", "*.tiff"),
+                ("Todos los archivos", "*.*")
+            ]
+        )
+
         if ruta:
-            cv2.imwrite(ruta, self.imagen_actual)
-            self.mostrar_mensaje(f"Imagen guardada en {ruta}")
-    
+            try:
+                cv2.imwrite(ruta, self.imagen_actual)
+                self.mostrar_mensaje(f"✅ Imagen guardada en {ruta}")
+            except Exception as e:
+                self.mostrar_mensaje(f"❌ Error al guardar: {str(e)}")
+
     def mostrar_imagen(self, panel, imagen, titulo):
+        # Limpiar panel
         for widget in panel.winfo_children():
             widget.destroy()
-        
-        if len(imagen.shape) == 3:
-            imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
-        else:
-            imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_GRAY2RGB)
-        
-        frame_contenedor = tk.Frame(panel, bg="white", bd=1, relief=tk.SOLID)
-        frame_contenedor.pack(padx=20, pady=20, expand=True)
-        
-        titulo_frame = tk.Frame(frame_contenedor, bg="#3498db")
-        titulo_frame.pack(fill=tk.X)
-        
-        titulo_label = tk.Label(titulo_frame, text=titulo, font=("Arial", 12, "bold"), bg="#3498db", fg="white")
-        titulo_label.pack(pady=8)
-        
-        altura, anchura = imagen_rgb.shape[:2]
-        info_frame = tk.Frame(frame_contenedor, bg="white")
-        info_frame.pack(fill=tk.X)
-        
-        info_label = tk.Label(info_frame, text=f"Dimensiones: {anchura}x{altura}", font=("Arial", 10), bg="white")
-        info_label.pack(pady=5)
-        
-        max_width = 700
-        max_height = 500
-        
-        factor_width = max_width / anchura if anchura > max_width else 1
-        factor_height = max_height / altura if altura > max_height else 1
-        factor = min(factor_width, factor_height)
-        
-        if factor < 1:
-            nueva_anchura = int(anchura * factor)
-            nueva_altura = int(altura * factor)
-            imagen_redimensionada = cv2.resize(imagen_rgb, (nueva_anchura, nueva_altura))
-        else:
-            imagen_redimensionada = imagen_rgb
-        
-        img = Image.fromarray(imagen_redimensionada)
-        img_tk = ImageTk.PhotoImage(image=img)
-        
-        imagen_frame = tk.Frame(frame_contenedor, bg="white")
-        imagen_frame.pack(padx=10, pady=10)
-        
-        label_img = tk.Label(imagen_frame, image=img_tk, bd=0)
-        label_img.image = img_tk
-        label_img.pack()
-    
-    def mostrar_imagen_frame(self, frame, imagen, titulo, fila, columna):
-        if len(imagen.shape) == 3:
-            imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
-        else:
-            imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_GRAY2RGB)
-        
-        subframe = tk.Frame(frame, bg="white", bd=1, relief=tk.SOLID)
-        subframe.grid(row=fila, column=columna, padx=10, pady=10, sticky="nsew")
-        
-        frame.grid_columnconfigure(columna, weight=1)
-        frame.grid_rowconfigure(fila, weight=1)
-        
-        titulo_frame = tk.Frame(subframe, bg="#3498db")
-        titulo_frame.pack(fill=tk.X)
-        
-        titulo_label = tk.Label(titulo_frame, text=titulo, font=("Arial", 11, "bold"), bg="#3498db", fg="white")
-        titulo_label.pack(pady=5)
-        
-        altura, anchura = imagen_rgb.shape[:2]
-        factor = min(250 / anchura, 250 / altura)
-        nueva_anchura = int(anchura * factor)
-        nueva_altura = int(altura * factor)
-        imagen_redimensionada = cv2.resize(imagen_rgb, (nueva_anchura, nueva_altura))
-        
-        img = Image.fromarray(imagen_redimensionada)
-        img_tk = ImageTk.PhotoImage(image=img)
-        
-        imagen_frame = tk.Frame(subframe, bg="white")
-        imagen_frame.pack(padx=5, pady=5)
-        
-        label_img = tk.Label(imagen_frame, image=img_tk, bd=0)
-        label_img.image = img_tk
-        label_img.pack()
-        
-        info_frame = tk.Frame(subframe, bg="white")
-        info_frame.pack(fill=tk.X)
-        
-        info_label = tk.Label(info_frame, text=f"Dimensiones: {anchura}x{altura}", font=("Arial", 9), bg="white")
-        info_label.pack(pady=5)
-    
+
+        try:
+            # Convertir imagen de OpenCV a formato RGB para mostrar
+            if len(imagen.shape) == 3:
+                imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+            else:
+                imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_GRAY2RGB)
+
+            # Frame contenedor
+            frame_contenedor = ctk.CTkFrame(panel)
+            frame_contenedor.pack(padx=20, pady=20, fill="both", expand=True)
+
+            # Título
+            titulo_label = ctk.CTkLabel(
+                frame_contenedor,
+                text=titulo,
+                font=ctk.CTkFont(size=18, weight="bold")
+            )
+            titulo_label.pack(pady=(15, 10))
+
+            # Información de dimensiones
+            altura, anchura = imagen_rgb.shape[:2]
+            info_label = ctk.CTkLabel(
+                frame_contenedor,
+                text=f"📏 Dimensiones: {anchura} x {altura} píxeles",
+                font=ctk.CTkFont(size=12)
+            )
+            info_label.pack(pady=(0, 10))
+
+            # Redimensionar imagen para mostrar
+            max_width, max_height = 600, 400
+            factor_width = max_width / anchura if anchura > max_width else 1
+            factor_height = max_height / altura if altura > max_height else 1
+            factor = min(factor_width, factor_height)
+
+            if factor < 1:
+                nueva_anchura = int(anchura * factor)
+                nueva_altura = int(altura * factor)
+                imagen_redimensionada = cv2.resize(imagen_rgb, (nueva_anchura, nueva_altura))
+            else:
+                imagen_redimensionada = imagen_rgb
+
+            # Convertir a PIL y mostrar
+            img_pil = Image.fromarray(imagen_redimensionada)
+            img_tk = ImageTk.PhotoImage(image=img_pil)
+
+            # Label para mostrar la imagen
+            imagen_label = ctk.CTkLabel(frame_contenedor, image=img_tk, text="")
+            imagen_label.image = img_tk  # Mantener referencia
+            imagen_label.pack(padx=15, pady=15)
+
+        except Exception as e:
+            error_label = ctk.CTkLabel(
+                panel,
+                text=f"❌ Error al mostrar imagen: {str(e)}",
+                font=ctk.CTkFont(size=14)
+            )
+            error_label.pack(pady=50)
+
     def mostrar_mensaje(self, mensaje):
-        from tkinter import messagebox
-        messagebox.showinfo("Información", mensaje)
+        # Crear ventana de mensaje personalizada
+        dialog = ctk.CTkToplevel(self)
+        dialog.geometry("400x200")
+        dialog.title("Información")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        # Centrar la ventana
+        dialog.geometry("+%d+%d" % (self.winfo_rootx() + 50, self.winfo_rooty() + 50))
+
+        # Contenido del diálogo
+        label = ctk.CTkLabel(
+            dialog,
+            text=mensaje,
+            font=ctk.CTkFont(size=14),
+            wraplength=350
+        )
+        label.pack(pady=40, padx=20)
+
+        # Botón OK
+        btn_ok = ctk.CTkButton(
+            dialog,
+            text="OK",
+            command=dialog.destroy,
+            width=100
+        )
+        btn_ok.pack(pady=20)
 
 
 if __name__ == "__main__":
