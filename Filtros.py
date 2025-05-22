@@ -61,4 +61,11 @@ class Filtros:
 
         return salida
     
+    def filtro_bilateral(self):
+        print("aplicando filtro bilateral")
+        if self.imagen_original is None:
+            return None
+        image_bilateral = cv2.bilateralFilter(self.imagen_original, 9, 75, 75)
+        return image_bilateral
+    
     
