@@ -84,6 +84,5 @@ class ProcesadorImagen:
             ((cubo_max - cubo_min) * suma_acumulada[g] + cubo_min) ** 3 for g in range(256)
         ])
         tabla_transformacion = np.clip(tabla_transformacion, 0, 255).astype(np.uint8)
-
         self.ecualizada_hipercubica = tabla_transformacion[self.imagen_grises]
         return self.ecualizada_hipercubica

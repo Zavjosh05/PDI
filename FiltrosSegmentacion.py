@@ -17,14 +17,14 @@ class FiltrosSegmentacion:
             print("lectura de imagen exitosa imagen Filtro Robert")
         #asegurar la conversion a escala de grises
 
-        self.imagen_original = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
+        imagen_nueva = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
          
         # Definir el kernel de Robert
         kernel_roberts_x = np.array([[1, 0], [0, -1]], dtype=np.float32)
         kernel_roberts_y = np.array([[0, 1], [-1, 0]], dtype=np.float32)
         # Aplicar el filtro
-        bordes_roberts_x = cv2.filter2D(self.imagen_original, -1, kernel_roberts_x)
-        bordes_roberts_y = cv2.filter2D(self.imagen_original, -1, kernel_roberts_y)
+        bordes_roberts_x = cv2.filter2D(imagen_nueva, -1, kernel_roberts_x)
+        bordes_roberts_y = cv2.filter2D(imagen_nueva, -1, kernel_roberts_y)
         imagen_bordes_roberts = cv2.addWeighted(bordes_roberts_x, 0.5, bordes_roberts_y, 0.5, 0)
 
         if(imagen_bordes_roberts.any()): 
@@ -39,10 +39,10 @@ class FiltrosSegmentacion:
             print("lectura de imagen exitosa imagen segmentación otsu")
         
         #asegurar la conversion a escala de grises
-        self.imagen_original = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
+        imagen_nueva = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
 
         # Método de Otsu
-        _, umbral_otsu = cv2.threshold(self.imagen_original, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, umbral_otsu = cv2.threshold(imagen_nueva, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         # Mostrar la imagen segmentada
         '''plt.figure(figsize=(6, 6))
         plt.imshow(umbral_otsu, cmap='gray')

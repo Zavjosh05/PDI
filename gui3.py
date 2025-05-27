@@ -28,7 +28,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Configuración de la ventana principal
         self.title("Procesador Avanzado de Imágenes")
-        self.geometry("1400x900")
+        self.geometry("1200x800+0+0")
         self.minsize(1200, 800)
 
         # Configurar grid principal
@@ -58,7 +58,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         # Logo y título
         self.logo_label = ctk.CTkLabel(
             self.sidebar_frame,
-            text="🖼️ Procesador\nde Imágenes",
+            text="Procesador\nde Imágenes",
             font=ctk.CTkFont(size=20, weight="bold")
         )
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
@@ -389,11 +389,10 @@ class InterfazProcesadorImagenes(ctk.CTk):
             self.ruta_imagen_actual = ruta
             try:
                 # Aquí usarías tu clase ProcesadorImagen
-                # imagen = self.procesador.cargar_imagen(ruta)
-                # self.ruido.cargar_imagen(ruta)
+                imagen = self.procesador.cargar_imagen(ruta)
+                self.ruido.cargar_imagen(ruta)
 
                 # Por ahora, cargar con OpenCV
-                imagen = cv2.imread(ruta)
                 if imagen is not None:
                     self.imagen_actual = imagen
                     self.mostrar_imagen(self.panel_basico, imagen, "Imagen Original")
@@ -455,6 +454,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
             # Aplicar umbralización
             _, imagen_umbral = cv2.threshold(imagen_gris, 127, 255, cv2.THRESH_BINARY)
+            #imagen_umbral = self.procesador.aplicar_umbral()
 
             self.imagen_actual = imagen_umbral
             self.mostrar_imagen(self.panel_basico, imagen_umbral, "Imagen Umbralizada")
@@ -465,7 +465,18 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
     # Placeholders para otros métodos
     def ecualizacion_hipercubica(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        try:
+            imagen_ecualizada = self.procesador.ecualizacion_hipercubica()
+            if imagen_ecualizada is not None:
+                self.imagen_actual = imagen_ecualizada
+                self.mostrar_imagen(self.panel_basico, imagen_ecualizada, "Imagen ecualizada con ecualización hipercubica")
+                self.tabview.set("🔧 Básico")
+                self.mostrar_mensaje("✅ Umbralización aplicada")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_operaciones_aritmeticas(self):
         self.mostrar_mensaje("🔧 Función en desarrollo")
@@ -477,31 +488,141 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.mostrar_mensaje("🔧 Función en desarrollo")
 
     def agregar_ruido_sal_pimienta(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        try:
+
+            imagen_ruido = self.ruido.agregar_ruido_sal_pimienta()
+            if imagen_ruido is not None:
+                self.imagen_actual = imagen_ruido
+                self.mostrar_imagen(self.panel_ruido, imagen_ruido, "Imagen con ruido sal y pimienta")
+                self.tabview("🔊 Ruido/Filtros")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def agregar_ruido_gaussiano(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        try:
+
+            imagen_ruido = self.ruido.agregar_ruido_gaussiano()
+            if imagen_ruido is not None:
+                self.imagen_actual = imagen_ruido
+                self.mostrar_imagen(self.panel_ruido, imagen_ruido, "Imagen con ruido gaussiano")
+                self.tabview("🔊 Ruido/Filtros")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_filtro_promediador(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        try:
+            imagen_filtrada = self.filtro.filtro_promediador()
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro promediador")
+                self.tabview("🔊 Ruido/Filtros")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_filtro_pesado(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        try:
+            imagen_filtrada = self.filtro.filtro_pesado()
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro promediador pesado")
+                self.tabview("🔊 Ruido/Filtros")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_filtro_gaussiano(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        try:
+            imagen_filtrada = self.filtro.filtro_gaussiano()
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro promediador")
+                self.tabview("🔊 Ruido/Filtros")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_filtro_mediana(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        try:
+            imagen_filtrada = self.filtro.filtro_mediana()
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro mediana")
+                self.tabview("🔊 Ruido/Filtros")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_filtro_Moda(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        try:
+            imagen_filtrada = self.filtro.filtro_moda()
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro moda")
+                self.tabview("🔊 Ruido/Filtros")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_filtro_Robert(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        self.filtros_segmentacion.imagen_original = self.imagen_actual
+        try:
+            imagen_filtrada = self.filtros_segmentacion.filtro_Robert()
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Filtro de Robert")
+                self.tabview("✂️ Segmentación")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_filtro_otsu(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        self.filtros_segmentacion.imagen_original = self.imagen_actual
+        try:
+            imagen_filtrada = self.filtros_segmentacion.filtro_otsu()
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Filtro de Otsu")
+                self.tabview("✂️ Segmentación")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def guardar_imagen_actual(self):
         if self.imagen_actual is None:
