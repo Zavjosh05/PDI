@@ -3,8 +3,8 @@ import numpy as np
 
 class AjustesDeBrillo:
 
-    def __init__(self, imagen_original):
-        self.imagen_original = imagen_original
+    def __init__(self):
+        self.imagen_original = None
         self.imagen_ecualizada = None
         self.imagen_gamma = None
         self.imagen_expandida = None

@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
-from skimage.filters import 
+from skimage.filters import *
 
 class Umbralizacion:
 
+    def __init__(self):
+        self.imagen_original = None
 # 1. Umbral por Media
     def umbral_media(self, img):
         mean_val = np.mean(img)

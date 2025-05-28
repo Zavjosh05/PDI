@@ -10,12 +10,16 @@ from tkinter import filedialog, messagebox
 import os
 from PIL import Image, ImageTk
 
-# Importación de clases (comentadas para ejemplo - reemplaza con tus imports reales)
+# Importacion de librerías personales
 from OperacionesLogicas2 import *
 from Ruido import *
 from Filtros import *
 from FiltrosSegmentacion import *
 from ProcesadorImagen import *
+from librerias.FiltrosPasaBajas import *
+from librerias.FiltrosPasaAltas import *
+from librerias.AjustesDeBrillo import *
+
 
 # Configuración del tema y apariencia
 ctk.set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -41,6 +45,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.ruido = Ruido()
         self.filtro = Filtros()
         self.filtros_segmentacion = FiltrosSegmentacion()
+        self.ajustes_brillo = AjustesDeBrillo()
+        self.filtros_pasa_bajas = FiltrosPasaBajas()
+        self.filtros_pasa_altas = FiltrosPasaAltas()
 
         self.imagen_1 = None
         self.imagen_2 = None
@@ -107,7 +114,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         botones_carga_imagenes = [
             ("🖼️ Imagen 1", self.cargar_imagen_1),
-            ("🖼️ Imagen 2", self.cargar_imagen_2)
+            ("🗑️ Eliminar Imagen 1",None),
+            ("🖼️ Imagen 2", self.cargar_imagen_2),
+            ("🗑️ Eliminar Imagen 2",None)
         ]
 
         for i, (texto, comando) in enumerate(botones_carga_imagenes):
@@ -116,7 +125,6 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 text=texto,
                 command=comando,
                 height=30,
-                width=50
             )
             btn.grid(row=i + 1, column=0, padx=20, pady=3, sticky="ew")
 
@@ -170,14 +178,24 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.logicas_label.grid(row=0, column=0, padx=20, pady=(15, 10))
 
         # Botón de operaciones lógicas
-        self.btn_operaciones_logicas = ctk.CTkButton(
-            self.logicas_frame,
-            text="⚡ Aplicar Operaciones Lógicas",
-            command=self.aplicar_operaciones_logicas,
-            height=35,
-            fg_color=["#3B8ED0", "#1F6AA5"]
-        )
-        self.btn_operaciones_logicas.grid(row=1, column=0, padx=20, pady=(5, 15), sticky="ew")
+        botones_logicas = [
+            ("🔳 Suma", self.convertir_a_grises),
+            ("📊 Resta", self.aplicar_umbral),
+            ("🧮 Multiplicación", self.ecualizacion_hipercubica),
+            ("🔳 AND", self.convertir_a_grises),
+            ("📊 OR", self.aplicar_umbral),
+            ("🧮 XOR", self.ecualizacion_hipercubica),
+            ("🧮 NOT", self.aplicar_operaciones_aritmeticas)
+        ]
+
+        for i, (texto, comando) in enumerate(botones_logicas):
+            btn = ctk.CTkButton(
+                self.logicas_frame,
+                text=texto,
+                command=comando,
+                height=30
+            )
+            btn.grid(row=i + 1, column=0, padx=20, pady=3, sticky="ew")
 
     def crear_seccion_ruido(self):
         # Frame para ruido y filtros
@@ -196,7 +214,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.ruido_sub_label = ctk.CTkLabel(
             self.ruido_frame,
             text="Agregar Ruido:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=16, weight="bold")
         )
         self.ruido_sub_label.grid(row=1, column=0, padx=20, pady=(5, 5))
 
@@ -218,20 +236,23 @@ class InterfazProcesadorImagenes(ctk.CTk):
         # Subsección de filtros
         self.filtros_sub_label = ctk.CTkLabel(
             self.ruido_frame,
-            text="Aplicar Filtros:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            text="Aplicar Filtros Pasa-bajas:",
+            font=ctk.CTkFont(size=16, weight="bold")
         )
         self.filtros_sub_label.grid(row=len(ruido_botones) + 2, column=0, padx=20, pady=(10, 5))
 
-        filtros_botones = [
-            ("📊 Promediador", self.aplicar_filtro_promediador),
-            ("⚖️ Pesado", self.aplicar_filtro_pesado),
-            ("🌊 Gaussiano", self.aplicar_filtro_gaussiano),
-            ("📊 Mediana", self.aplicar_filtro_mediana),
-            ("📈 Moda", self.aplicar_filtro_Moda)
+        filtros_botones_pb = [
+            ("📈 Promediador", self.aplicar_filtro_promediador),
+            ("📈 Pesado", self.aplicar_filtro_pesado),
+            ("📈 Mediana", self.aplicar_filtro_mediana),
+            ("📈 Moda", self.aplicar_filtro_Moda),
+            ("📈 Bilateral",None),
+            ("📈 Max",None),
+            ("📈 Min",None),
+            ("📈 Gaussiano", self.aplicar_filtro_gaussiano)
         ]
 
-        for i, (texto, comando) in enumerate(filtros_botones):
+        for i, (texto, comando) in enumerate(filtros_botones_pb):
             btn = ctk.CTkButton(
                 self.ruido_frame,
                 text=texto,
@@ -241,9 +262,37 @@ class InterfazProcesadorImagenes(ctk.CTk):
             )
             btn.grid(row=i + len(ruido_botones) + 3, column=0, padx=20, pady=3, sticky="ew")
 
+        self.filtros_sub_label = ctk.CTkLabel(
+            self.ruido_frame,
+            text="Aplicar Filtros Pasa-altas:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.filtros_sub_label.grid(row=i + len(ruido_botones) + 4, column=0, padx=20, pady=(10, 5))
+
+        filtros_botones_pa = [
+            ("📈 Promediador", self.aplicar_filtro_promediador),
+            ("📈 Pesado", self.aplicar_filtro_pesado),
+            ("📈 Mediana", self.aplicar_filtro_mediana),
+            ("📈 Moda", self.aplicar_filtro_Moda),
+            ("📈 Bilateral",None),
+            ("📈 Max",None),
+            ("📈 Min",None),
+            ("📈 Gaussiano", self.aplicar_filtro_gaussiano)
+        ]
+
+        for i, (texto, comando) in enumerate(filtros_botones_pa):
+            btn = ctk.CTkButton(
+                self.ruido_frame,
+                text=texto,
+                command=comando,
+                height=30,
+                fg_color=["#4ECDC4", "#3BA99C"]
+            )
+            btn.grid(row=i + len(ruido_botones) + len(filtros_botones_pb) + 5, column=0, padx=20, pady=3, sticky="ew")
+
         # Espaciado final
-        ctk.CTkLabel(self.ruido_frame, text="").grid(row=len(ruido_botones) + len(filtros_botones) + 3, column=0,
-                                                     pady=(0, 15))
+        ctk.CTkLabel(self.ruido_frame, text="").grid(row=len(ruido_botones) + len(filtros_botones_pb) + 
+                                                     len(filtros_botones_pa) + 5, column=0, pady=(0, 15))
 
     def crear_seccion_segmentacion(self):
         # Frame para segmentación
@@ -260,8 +309,15 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Botones de segmentación
         segmentacion_botones = [
+            ("🔍 Umbral Media", self.aplicar_filtro_Robert),
+            ("🎯 Método de Otsu", self.aplicar_filtro_otsu),
+            ("🎯 Multiumbralización", self.aplicar_filtro_otsu),
+            ("🎯 Entropía Kapur", self.aplicar_filtro_otsu),
+            ("🎯 Umbral por banda", self.aplicar_filtro_otsu),
+            ("🎯 Umbral adaptativo", self.aplicar_filtro_otsu),
+            ("🎯 Minimo del histograma", self.aplicar_filtro_otsu),
             ("🔍 Filtro de Robert", self.aplicar_filtro_Robert),
-            ("🎯 Método de Otsu", self.aplicar_filtro_otsu)
+            ("🎯 Vecindad 8", self.aplicar_filtro_otsu)
         ]
 
         for i, (texto, comando) in enumerate(segmentacion_botones):

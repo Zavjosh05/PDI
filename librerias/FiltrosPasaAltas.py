@@ -2,6 +2,9 @@ import cv2
 import numpy as np
 
 class FiltrosPasaAltas:
+
+    def __init__(self):
+        self.imagen_original = None
     # 1. Operador Robinson (8 direcciones)
     def robinson_filter(self, img):
         kernels = [

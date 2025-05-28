@@ -3,6 +3,8 @@ import numpy as np
 
 class FiltrosPasaBajas:
 
+    def __init__(self):
+        self.imagen_original = None
 # 1. Filtro promediador (box blur)
     def filtro_promediador(self, img):
         kernel_size = 5
@@ -10,7 +12,7 @@ class FiltrosPasaBajas:
         return img_promediador
 
 # 2. Filtro promediador pesado (weighted average)
-    def filtro_promediador_pesado(self, img, k):
+    def filtro_promediador_pesado(self, img, k=5):
         kernel_pesado = np.array([[1, 2, 1],
                                 [2, k, 2],
                                 [1, 2, 1]]) / (8+k)
