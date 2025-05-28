@@ -42,10 +42,12 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.filtro = Filtros()
         self.filtros_segmentacion = FiltrosSegmentacion()
 
-        self.imagen_actual = None
-        self.ruta_imagen_actual = None
-        self.ruta_imagen1_logica = None
-        self.ruta_imagen2_logica = None
+        self.imagen_1 = None
+        self.imagen_2 = None
+        self.imagen_3 = None
+
+        self.imagen_1_ind = None
+        self.imagen_2_ind = None
 
         self.crear_interfaz()
 
@@ -88,6 +90,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.crear_selector_tema()
 
     def crear_seccion_carga(self):
+        i = 0
         # Frame para carga de imágenes
         self.carga_frame = ctk.CTkFrame(self.sidebar_frame)
         self.carga_frame.grid(row=1, column=0, padx=(20, 20), pady=(20, 10), sticky="ew")
@@ -101,33 +104,23 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.carga_label.grid(row=0, column=0, padx=20, pady=(15, 10))
 
         # Botones de carga
-        self.btn_cargar_principal = ctk.CTkButton(
-            self.carga_frame,
-            text="🖼️ Imagen Principal",
-            command=self.cargar_imagen_principal,
-            height=35
-        )
-        self.btn_cargar_principal.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
 
-        self.btn_cargar_img1 = ctk.CTkButton(
-            self.carga_frame,
-            text="📷 Imagen 1 (Op. Lógicas)",
-            command=self.cargar_imagen1_logica,
-            height=35,
-            fg_color="transparent",
-            border_width=2
-        )
-        self.btn_cargar_img1.grid(row=2, column=0, padx=20, pady=5, sticky="ew")
+        botones_carga_imagenes = [
+            ("🖼️ Imagen 1", self.cargar_imagen_1),
+            ("🖼️ Imagen 2", self.cargar_imagen_2)
+        ]
 
-        self.btn_cargar_img2 = ctk.CTkButton(
-            self.carga_frame,
-            text="📸 Imagen 2 (Op. Lógicas)",
-            command=self.cargar_imagen2_logica,
-            height=35,
-            fg_color="transparent",
-            border_width=2
-        )
-        self.btn_cargar_img2.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
+        for i, (texto, comando) in enumerate(botones_carga_imagenes):
+            btn = ctk.CTkButton(
+                self.carga_frame,
+                text=texto,
+                command=comando,
+                height=30,
+                width=50
+            )
+            btn.grid(row=i + 1, column=0, padx=20, pady=3, sticky="ew")
+
+
 
     def crear_seccion_procesamiento(self):
         # Frame para procesamiento básico
@@ -380,6 +373,24 @@ class InterfazProcesadorImagenes(ctk.CTk):
         ctk.set_appearance_mode(nuevo_tema)
 
     # Métodos de funcionalidad (placeholders - implementa según tus clases)
+
+    def cargar_imagen(self):
+        ruta = None
+        img = None
+        ruta = filedialog.askopenfilename(
+            title="Seleccionar imagen principal",
+            filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp *.tiff")]
+        )
+
+        try:
+            if ruta is not None:
+                img = cv2.imread(ruta)
+                if img is not None:
+                    img = cv2.resize(img, (400,400))
+                    return img
+        except Exception as e:
+                self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
     def cargar_imagen_principal(self):
         ruta = filedialog.askopenfilename(
             title="Seleccionar imagen principal",
@@ -403,40 +414,39 @@ class InterfazProcesadorImagenes(ctk.CTk):
             except Exception as e:
                 self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
-    def cargar_imagen1_logica(self):
-        ruta = filedialog.askopenfilename(
-            title="Seleccionar primera imagen para operaciones lógicas",
-            filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp *.tiff")]
-        )
-        if ruta:
-            self.ruta_imagen1_logica = ruta
-            self.mostrar_mensaje("✅ Primera imagen para operaciones lógicas cargada")
+    def cargar_imagen_1(self):
+        self.imagen_1 = self.cargar_imagen()
 
-    def cargar_imagen2_logica(self):
-        ruta = filedialog.askopenfilename(
-            title="Seleccionar segunda imagen para operaciones lógicas",
-            filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp *.tiff")]
-        )
-        if ruta:
-            self.ruta_imagen2_logica = ruta
-            self.mostrar_mensaje("✅ Segunda imagen para operaciones lógicas cargada")
+        if self.imagen_1 is not None:
+            self.mostrar_imagen(self.panel_basico, self.imagen_1, "Imagen 1")
+            self.tabview.set("🔧 Básico")
+        else:
+            self.mostrar_mensaje("❌ Error al cargar la imagen")
+
+    def cargar_imagen_2(self):
+        self.imagen_2 = self.cargar_imagen()
+
+        if self.imagen_2 is not None:
+            self.mostrar_imagen(self.panel_basico, self.imagen_2, "Imagen 2")
+            self.tabview.set("🔧 Básico")
+        else:
+            self.mostrar_mensaje("❌ Error al cargar la imagen")
+        
 
     def convertir_a_grises(self):
-        if self.imagen_actual is None:
+        if self.imagen_1 is None and self.imagen_2 is None:
             self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
             return
-
         try:
             # Convertir a escala de grises
-            if len(self.imagen_actual.shape) == 3:
-                imagen_grises = cv2.cvtColor(self.imagen_actual, cv2.COLOR_BGR2GRAY)
+            if len(self.imagen_1.shape) == 3:
+                imagen_grises = cv2.cvtColor(self.imagen_1, cv2.COLOR_BGR2GRAY)
             else:
-                imagen_grises = self.imagen_actual.copy()
+                imagen_grises = self.imagen_1.copy()
 
-            self.imagen_actual = imagen_grises
+            self.imagen_1 = imagen_grises
             self.mostrar_imagen(self.panel_basico, imagen_grises, "Imagen en Escala de Grises")
             self.tabview.set("🔧 Básico")
-            self.mostrar_mensaje("✅ Conversión a escala de grises completada")
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
@@ -493,7 +503,6 @@ class InterfazProcesadorImagenes(ctk.CTk):
             return
         
         try:
-
             imagen_ruido = self.ruido.agregar_ruido_sal_pimienta()
             if imagen_ruido is not None:
                 self.imagen_actual = imagen_ruido
@@ -696,7 +705,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
             # Convertir a PIL y mostrar
             img_pil = Image.fromarray(imagen_redimensionada)
-            img_tk = ImageTk.PhotoImage(image=img_pil)
+            #img_tk = ImageTk.PhotoImage(image=img_pil)
+            img_tk =  ctk.CTkImage(img_pil, size=(400,400))
 
             # Label para mostrar la imagen
             imagen_label = ctk.CTkLabel(frame_contenedor, image=img_tk, text="")

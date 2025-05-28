@@ -28,11 +28,11 @@ class ProcesadorImagen:
         self.imagen_multiplicacion = cv2.multiply(self.imagen_original, 1.2)
         return self.imagen_suma, self.imagen_resta, self.imagen_multiplicacion
 
-    def convertir_a_grises(self):
-        if self.imagen_original is None:
+    def convertir_a_grises(self, img):
+        if img is None:
             return None
-        self.imagen_grises = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
-        return self.imagen_grises
+        img = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
+        return img
 
     def aplicar_umbral(self):
         if self.imagen_grises is None:
