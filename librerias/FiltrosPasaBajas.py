@@ -4,7 +4,7 @@ import numpy as np
 class FiltrosPasaBajas:
 
     def __init__(self):
-        self.imagen_original = None
+        self.kernel_size = 3
 # 1. Filtro promediador (box blur)
     def filtro_promediador(self, img):
         kernel_size = 5

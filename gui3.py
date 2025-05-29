@@ -32,7 +32,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Configuración de la ventana principal
         self.title("Procesador Avanzado de Imágenes")
-        self.geometry("1200x800+0+0")
+        self.geometry("1200x1000+0+0")
         self.minsize(1200, 800)
 
         # Configurar grid principal
@@ -51,8 +51,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         self.imagen_1 = None
         self.imagen_2 = None
-        self.imagen_3 = None
-
+        self.imagen_display = [None,None]
+        self.imagen_1_hist = []
+        self.imagen_2_hist = []
         self.imagen_1_ind = None
         self.imagen_2_ind = None
 
@@ -112,23 +113,53 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Botones de carga
 
-        botones_carga_imagenes = [
-            ("🖼️ Imagen 1", self.cargar_imagen_1),
-            ("🗑️ Eliminar Imagen 1",None),
-            ("🖼️ Imagen 2", self.cargar_imagen_2),
-            ("🗑️ Eliminar Imagen 2",None)
+        self.ruido_sub_label = ctk.CTkLabel(
+            self.carga_frame,
+            text="Imagen 1:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.ruido_sub_label.grid(row=1, column=0, padx=20, pady=(5, 5))
+
+        botones_carga_imagen1 = [
+            ("🖼️ Cargar", self.cargar_imagen_1),
+            ("🗑️ Eliminar",None),
+            ("🧊 Restablecer",None)
         ]
 
-        for i, (texto, comando) in enumerate(botones_carga_imagenes):
+        for i, (texto, comando) in enumerate(botones_carga_imagen1):
             btn = ctk.CTkButton(
                 self.carga_frame,
                 text=texto,
                 command=comando,
                 height=30,
+                hover_color="#000000"
             )
-            btn.grid(row=i + 1, column=0, padx=20, pady=3, sticky="ew")
+            btn.grid(row=i + 2, column=0, padx=20, pady=3, sticky="ew")
 
+        
+        self.ruido_sub_label = ctk.CTkLabel(
+            self.carga_frame,
+            text="Imagen 2:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.ruido_sub_label.grid(row=len(botones_carga_imagen1)+3,
+                                   column=0, padx=20, pady=(5, 5))
 
+        botones_carga_imagen2 = [
+            ("🖼️ Cargar", self.cargar_imagen_2),
+            ("🗑️ Eliminar",None),
+            ("🧊 Restablecer",None)
+        ]
+
+        for i, (texto, comando) in enumerate(botones_carga_imagen2):
+            btn = ctk.CTkButton(
+                self.carga_frame,
+                text=texto,
+                command=comando,
+                height=30,
+                hover_color="#000000"
+            )
+            btn.grid(row=i + len(botones_carga_imagen1) + 4, column=0, padx=20, pady=3, sticky="ew")
 
     def crear_seccion_procesamiento(self):
         # Frame para procesamiento básico
@@ -148,7 +179,6 @@ class InterfazProcesadorImagenes(ctk.CTk):
             ("🔳 Escala de Grises", self.convertir_a_grises),
             ("📊 Aplicar Umbral", self.aplicar_umbral),
             ("📈 Ecualización Hipercúbica", self.ecualizacion_hipercubica),
-            ("🧮 Operaciones Aritméticas", self.aplicar_operaciones_aritmeticas),
             ("📊 Calcular Histogramas", self.calcular_histogramas)
         ]
 
@@ -157,7 +187,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.procesamiento_frame,
                 text=texto,
                 command=comando,
-                height=30
+                height=30,
+                fg_color="#9A721D",
+                hover_color="#000000"
             )
             btn.grid(row=i + 1, column=0, padx=20, pady=3, sticky="ew")
 
@@ -172,7 +204,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         # Título de la sección
         self.logicas_label = ctk.CTkLabel(
             self.logicas_frame,
-            text="🔗 Operaciones Lógicas",
+            text="🔗 Operaciones Lógicas y\n aritmeticas",
             font=ctk.CTkFont(size=16, weight="bold")
         )
         self.logicas_label.grid(row=0, column=0, padx=20, pady=(15, 10))
@@ -193,7 +225,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.logicas_frame,
                 text=texto,
                 command=comando,
-                height=30
+                height=30,
+                fg_color="#11500C",
+                hover_color="#000000"
             )
             btn.grid(row=i + 1, column=0, padx=20, pady=3, sticky="ew")
 
@@ -229,7 +263,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 text=texto,
                 command=comando,
                 height=30,
-                fg_color=["#FF6B6B", "#CC5555"]
+                fg_color="#001A61",
+                hover_color="#000000"
             )
             btn.grid(row=i + 2, column=0, padx=20, pady=3, sticky="ew")
 
@@ -258,7 +293,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 text=texto,
                 command=comando,
                 height=30,
-                fg_color=["#4ECDC4", "#3BA99C"]
+                fg_color= "#0A4B43",
+                hover_color="#000000"
             )
             btn.grid(row=i + len(ruido_botones) + 3, column=0, padx=20, pady=3, sticky="ew")
 
@@ -270,14 +306,13 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.filtros_sub_label.grid(row=i + len(ruido_botones) + 4, column=0, padx=20, pady=(10, 5))
 
         filtros_botones_pa = [
-            ("📈 Promediador", self.aplicar_filtro_promediador),
-            ("📈 Pesado", self.aplicar_filtro_pesado),
-            ("📈 Mediana", self.aplicar_filtro_mediana),
-            ("📈 Moda", self.aplicar_filtro_Moda),
-            ("📈 Bilateral",None),
-            ("📈 Max",None),
-            ("📈 Min",None),
-            ("📈 Gaussiano", self.aplicar_filtro_gaussiano)
+            ("📈 Robinson", self.aplicar_filtro_promediador),
+            ("📈 Robert", self.aplicar_filtro_pesado),
+            ("📈 Prewitt", self.aplicar_filtro_mediana),
+            ("📈 Sobel", self.aplicar_filtro_Moda),
+            ("📈 Kirch",None),
+            ("📈 Canny",None),
+            ("📈 Op. Lapaciano",None)
         ]
 
         for i, (texto, comando) in enumerate(filtros_botones_pa):
@@ -286,7 +321,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 text=texto,
                 command=comando,
                 height=30,
-                fg_color=["#4ECDC4", "#3BA99C"]
+                    fg_color="#29164A",
+                hover_color="#000000"
             )
             btn.grid(row=i + len(ruido_botones) + len(filtros_botones_pb) + 5, column=0, padx=20, pady=3, sticky="ew")
 
@@ -326,7 +362,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 text=texto,
                 command=comando,
                 height=35,
-                fg_color=["#9B59B6", "#8E44AD"]
+                fg_color="#631D29",
+                hover_color="#000000"
             )
             btn.grid(row=i + 1, column=0, padx=20, pady=5, sticky="ew")
 
@@ -352,8 +389,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
             text="💾 Guardar Imagen Actual",
             command=self.guardar_imagen_actual,
             height=40,
-            fg_color=["#27AE60", "#229954"],
-            font=ctk.CTkFont(size=14, weight="bold")
+            fg_color="#229954",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            hover_color="#000000"
         )
         self.btn_guardar.grid(row=1, column=0, padx=20, pady=(5, 15), sticky="ew")
 
@@ -476,6 +514,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         if self.imagen_1 is not None:
             self.mostrar_imagen(self.panel_basico, self.imagen_1, "Imagen 1")
             self.tabview.set("🔧 Básico")
+            self.imagen_display[0] = self.imagen_1
         else:
             self.mostrar_mensaje("❌ Error al cargar la imagen")
 
@@ -485,6 +524,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         if self.imagen_2 is not None:
             self.mostrar_imagen(self.panel_basico, self.imagen_2, "Imagen 2")
             self.tabview.set("🔧 Básico")
+            self.imagen_display[1] = self.imagen_2
         else:
             self.mostrar_mensaje("❌ Error al cargar la imagen")
         
@@ -611,22 +651,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
-
-    def aplicar_filtro_gaussiano(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
-            return
-        
-        try:
-            imagen_filtrada = self.filtro.filtro_gaussiano()
-            if imagen_filtrada is not None:
-                self.imagen_actual = imagen_filtrada
-                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro promediador")
-                self.tabview("🔊 Ruido/Filtros")
-
-        except Exception as e:
-            self.mostrar_mensaje(f"❌ Error: {str(e)}")
-
+    
     def aplicar_filtro_mediana(self):
         if self.imagen_actual is None:
             self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
@@ -642,6 +667,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
     def aplicar_filtro_Moda(self):
         if self.imagen_actual is None:
             self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
@@ -652,6 +680,30 @@ class InterfazProcesadorImagenes(ctk.CTk):
             if imagen_filtrada is not None:
                 self.imagen_actual = imagen_filtrada
                 self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro moda")
+                self.tabview("🔊 Ruido/Filtros")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_filtro_bilateral(self):
+        return
+    
+    def aplicar_filtro_max(self):
+        return
+    
+    def aplicar_filtro_min(self):
+        return
+
+    def aplicar_filtro_gaussiano(self):
+        if self.imagen_actual is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return
+        
+        try:
+            imagen_filtrada = self.filtro.filtro_gaussiano()
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro promediador")
                 self.tabview("🔊 Ruido/Filtros")
 
         except Exception as e:
