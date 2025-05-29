@@ -15,6 +15,27 @@ class OperacionesLogicas2:
             self.imagen1 = cv2.resize(self.imagen1, (300, 300))
             self.imagen2 = cv2.resize(self.imagen2, (300, 300))
         return self.imagen1, self.imagen2
+    
+    def aplicar_suma(self, img1, img2):
+        return cv2.add(img1,img2)
+    
+    def aplicar_resta(self, img1, img2):
+        return cv2.subtract(img1,img2)
+    
+    def aplicar_multiplicacion(self, img1, img2):
+        return cv2.multiply(img1,img2)
+    
+    def aplicar_and(self, img1, img2):
+        return cv2.bitwise_and(img1, img2)
+    
+    def aplicar_or(self, img1, img2):
+        return cv2.bitwise_or(img1,img2)
+    
+    def aplicar_xor(self, img1, img2):
+        return cv2.bitwise_xor(img1,img2)
+    
+    def aplicar_not(self, img):
+        return cv2.bitwise_not(img)
 
     def aplicar_operaciones_logicas(self):
         if self.imagen1 is None or self.imagen2 is None:

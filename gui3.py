@@ -211,13 +211,13 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Botón de operaciones lógicas
         botones_logicas = [
-            ("🔳 Suma", self.convertir_a_grises),
+            ("🔳 Suma", self.aplicar_suma_gui),
             ("📊 Resta", self.aplicar_umbral),
             ("🧮 Multiplicación", self.ecualizacion_hipercubica),
             ("🔳 AND", self.convertir_a_grises),
             ("📊 OR", self.aplicar_umbral),
             ("🧮 XOR", self.ecualizacion_hipercubica),
-            ("🧮 NOT", self.aplicar_operaciones_aritmeticas)
+            ("🧮 NOT", None)
         ]
 
         for i, (texto, comando) in enumerate(botones_logicas):
@@ -345,14 +345,14 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Botones de segmentación
         segmentacion_botones = [
-            ("🔍 Umbral Media", self.aplicar_filtro_Robert),
+            ("🎯 Umbral Media", self.aplicar_filtro_Robert),
             ("🎯 Método de Otsu", self.aplicar_filtro_otsu),
             ("🎯 Multiumbralización", self.aplicar_filtro_otsu),
             ("🎯 Entropía Kapur", self.aplicar_filtro_otsu),
             ("🎯 Umbral por banda", self.aplicar_filtro_otsu),
             ("🎯 Umbral adaptativo", self.aplicar_filtro_otsu),
             ("🎯 Minimo del histograma", self.aplicar_filtro_otsu),
-            ("🔍 Filtro de Robert", self.aplicar_filtro_Robert),
+            ("🎯 Filtro de Robert", self.aplicar_filtro_Robert),
             ("🎯 Vecindad 8", self.aplicar_filtro_otsu)
         ]
 
@@ -584,13 +584,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
-    def aplicar_operaciones_aritmeticas(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
-
     def calcular_histogramas(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
-
-    def aplicar_operaciones_logicas(self):
         self.mostrar_mensaje("🔧 Función en desarrollo")
 
     def agregar_ruido_sal_pimienta(self):
@@ -622,6 +616,91 @@ class InterfazProcesadorImagenes(ctk.CTk):
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
+    def aplicar_suma_gui(self):
+        if self.imagen_display[0] is None or self.imagen_display[1] is None:
+            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+        else:
+            imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0],self.imagen_display[1])
+            if imagen_suma is not None:
+                self.imagen_display[0] = imagen_suma
+                self.mostrar_imagen(self.panel_logicas,imagen_suma,"Operación suma")
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_imagen("Error al generar la imagen")
+                
+    def aplicar_resta_gui(self):
+        if self.imagen_display[0] is None or self.imagen_display[1] is None:
+            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+        else:
+            imagen_resta = self.operaciones_logicas.aplicar_resta(self.imagen_display[0],self.imagen_display[1])
+            if imagen_resta is not None:
+                self.imagen_display[0] = imagen_resta
+                self.mostrar_imagen(self.panel_logicas,imagen_resta,"Operación resta")
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_imagen("Error al generar la imagen")
+
+    def aplicar_multiplicacion_gui(self):
+        if self.imagen_display[0] is None or self.imagen_display[1] is None:
+            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+        else:
+            imagen_mult = self.operaciones_logicas.aplicar_multiplicacion(self.imagen_display[0],self.imagen_display[1])
+            if imagen_mult is not None:
+                self.imagen_display[0] = imagen_mult
+                self.mostrar_imagen(self.panel_logicas,imagen_mult,"Operación multiplicación")
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_imagen("Error al generar la imagen")
+
+    def aplicar_and_gui(self):
+        if self.imagen_display[0] is None or self.imagen_display[1] is None:
+            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+        else:
+            imagen_and = self.operaciones_logicas.aplicar_and(self.imagen_display[0],self.imagen_display[1])
+            if imagen_and is not None:
+                self.imagen_display[0] = imagen_and
+                self.mostrar_imagen(self.panel_logicas,imagen_and,"Operación AND")
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_imagen("Error al generar la imagen")
+
+
+    def aplicar_or_gui(self):
+        if self.imagen_display[0] is None or self.imagen_display[1] is None:
+            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+        else:
+            imagen_or = self.operaciones_logicas.aplicar_or(self.imagen_display[0],self.imagen_display[1])
+            if imagen_or is not None:
+                self.imagen_display[0] = imagen_or
+                self.mostrar_imagen(self.panel_logicas,imagen_or,"Operación OR")
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_imagen("Error al generar la imagen")
+
+    def aplicar_xor_gui(self):
+        if self.imagen_display[0] is None or self.imagen_display[1] is None:
+            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+        else:
+            imagen_xor = self.operaciones_logicas.aplicar_xor(self.imagen_display[0],self.imagen_display[1])
+            if imagen_xor is not None:
+                self.imagen_display[0] = imagen_xor
+                self.mostrar_imagen(self.panel_logicas,imagen_xor,"Operación XOR")
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_imagen("Error al generar la imagen")
+
+    def aplicar_not_gui(self):
+        if self.imagen_display[0] is None or self.imagen_display[1] is None:
+            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+        else:
+            imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0],self.imagen_display[1])
+            if imagen_suma is not None:
+                self.imagen_display[0] = imagen_suma
+                self.mostrar_imagen(self.panel_logicas,imagen_suma,"Imagen suma")
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_imagen("Error al generar la imagen")
+    
     def aplicar_filtro_promediador(self):
         if self.imagen_actual is None:
             self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
