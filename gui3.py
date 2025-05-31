@@ -54,8 +54,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.imagen_display = [None,None]
         self.imagen_1_hist = []
         self.imagen_2_hist = []
-        self.imagen_1_ind = None
-        self.imagen_2_ind = None
+        self.imagen_1_ind = False
+        self.imagen_2_ind = False
+        self.indice_actual = 0
 
         self.crear_interfaz()
 
@@ -97,6 +98,14 @@ class InterfazProcesadorImagenes(ctk.CTk):
         # Configurar el selector de tema
         self.crear_selector_tema()
 
+    def selector_de_imagenes(self,choice):
+        if choice == "Imagen 1":
+            self.indice_actual = 0
+            self.mostrar_mensaje("Imagen 1 seleccionada")
+        else:
+            self.indice_actual = 1
+            self.mostrar_mensaje("Imagen 2 seleccionada")
+
     def crear_seccion_carga(self):
         i = 0
         # Frame para carga de imágenes
@@ -111,6 +120,20 @@ class InterfazProcesadorImagenes(ctk.CTk):
         )
         self.carga_label.grid(row=0, column=0, padx=20, pady=(15, 10))
 
+        self.ruido_sub_label = ctk.CTkLabel(
+            self.carga_frame,
+            text="Seleccionar imagen:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.ruido_sub_label.grid(row=1, column=0, padx=20, pady=(5, 5))
+
+        self.combo_selector = ctk.CTkComboBox(
+            self.carga_frame,
+            values=["Imagen 1","Imagen 2"],
+            command=self.selector_de_imagenes
+        )
+        self.combo_selector.grid(row=2, column=0, padx=20, pady=(5,5))
+        
         # Botones de carga
 
         self.ruido_sub_label = ctk.CTkLabel(
@@ -118,12 +141,12 @@ class InterfazProcesadorImagenes(ctk.CTk):
             text="Imagen 1:",
             font=ctk.CTkFont(size=16, weight="bold")
         )
-        self.ruido_sub_label.grid(row=1, column=0, padx=20, pady=(5, 5))
+        self.ruido_sub_label.grid(row=3, column=0, padx=20, pady=(5, 5))
 
         botones_carga_imagen1 = [
             ("🖼️ Cargar", self.cargar_imagen_1),
             ("🗑️ Eliminar",None),
-            ("🧊 Restablecer",None)
+            ("🧊 Restablecer",self.restablecer_imagen_1)
         ]
 
         for i, (texto, comando) in enumerate(botones_carga_imagen1):
@@ -134,7 +157,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 height=30,
                 hover_color="#000000"
             )
-            btn.grid(row=i + 2, column=0, padx=20, pady=3, sticky="ew")
+            btn.grid(row=i + 4, column=0, padx=20, pady=3, sticky="ew")
 
         
         self.ruido_sub_label = ctk.CTkLabel(
@@ -142,13 +165,13 @@ class InterfazProcesadorImagenes(ctk.CTk):
             text="Imagen 2:",
             font=ctk.CTkFont(size=16, weight="bold")
         )
-        self.ruido_sub_label.grid(row=len(botones_carga_imagen1)+3,
+        self.ruido_sub_label.grid(row=len(botones_carga_imagen1)+5,
                                    column=0, padx=20, pady=(5, 5))
 
         botones_carga_imagen2 = [
             ("🖼️ Cargar", self.cargar_imagen_2),
             ("🗑️ Eliminar",None),
-            ("🧊 Restablecer",None)
+            ("🧊 Restablecer",self.restablecer_imagen_2)
         ]
 
         for i, (texto, comando) in enumerate(botones_carga_imagen2):
@@ -159,7 +182,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 height=30,
                 hover_color="#000000"
             )
-            btn.grid(row=i + len(botones_carga_imagen1) + 4, column=0, padx=20, pady=3, sticky="ew")
+            btn.grid(row=i + len(botones_carga_imagen1) + 6, column=0, padx=20, pady=3, sticky="ew")
 
     def crear_seccion_procesamiento(self):
         # Frame para procesamiento básico
@@ -212,12 +235,12 @@ class InterfazProcesadorImagenes(ctk.CTk):
         # Botón de operaciones lógicas
         botones_logicas = [
             ("🔳 Suma", self.aplicar_suma_gui),
-            ("📊 Resta", self.aplicar_umbral),
-            ("🧮 Multiplicación", self.ecualizacion_hipercubica),
-            ("🔳 AND", self.convertir_a_grises),
-            ("📊 OR", self.aplicar_umbral),
-            ("🧮 XOR", self.ecualizacion_hipercubica),
-            ("🧮 NOT", None)
+            ("📊 Resta", self.aplicar_resta_gui),
+            ("🧮 Multiplicación", self.aplicar_multiplicacion_gui),
+            ("🔳 AND", self.aplicar_and_gui),
+            ("📊 OR", self.aplicar_or_gui),
+            ("🧮 XOR", self.aplicar_xor_gui),
+            ("🧮 NOT", self.aplicar_not_gui)
         ]
 
         for i, (texto, comando) in enumerate(botones_logicas):
@@ -527,20 +550,44 @@ class InterfazProcesadorImagenes(ctk.CTk):
             self.imagen_display[1] = self.imagen_2
         else:
             self.mostrar_mensaje("❌ Error al cargar la imagen")
+
+    def verificar_imagen_cargada(self, img):
+        if img is None:
+            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            return False
+        else:
+            return True
+
+    def restablecer_imagen_1(self):
+        if self.verificar_imagen_cargada(self.imagen_1) is False:
+            return
+        
+        self.imagen_display[0] = self.imagen_1
+        self.mostrar_imagen(self.panel_basico, self.imagen_1, "Imagen 1")
+        self.tabview.set("🔧 Básico")
+
+    def restablecer_imagen_2(self):
+        if self.verificar_imagen_cargada(self.imagen_2) is False:
+            return
+        
+        self.imagen_display[1] = self.imagen_2
+        self.mostrar_imagen(self.panel_basico, self.imagen_2, "Imagen 2")
+        self.tabview.set("🔧 Básico")
         
 
+            
+
     def convertir_a_grises(self):
-        if self.imagen_1 is None and self.imagen_2 is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
         try:
             # Convertir a escala de grises
-            if len(self.imagen_1.shape) == 3:
-                imagen_grises = cv2.cvtColor(self.imagen_1, cv2.COLOR_BGR2GRAY)
+            if len(self.imagen_display[self.indice_actual]) == 3:
+                imagen_grises = cv2.cvtColor(self.imagen_display[self.indice_actual], cv2.COLOR_BGR2GRAY)
             else:
-                imagen_grises = self.imagen_1.copy()
+                imagen_grises = self.imagen_display[self.indice_actual].copy()
 
-            self.imagen_1 = imagen_grises
+            self.imagen_display[self.indice_actual] = imagen_grises
             self.mostrar_imagen(self.panel_basico, imagen_grises, "Imagen en Escala de Grises")
             self.tabview.set("🔧 Básico")
         except Exception as e:
@@ -618,7 +665,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
     def aplicar_suma_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
-            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+            self.mostrar_mensaje("Se necesita cargar las dos imagenes")
         else:
             imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0],self.imagen_display[1])
             if imagen_suma is not None:
@@ -630,7 +677,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 
     def aplicar_resta_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
-            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+            self.mostrar_mensaje("Se necesita cargar las dos imagenes")
         else:
             imagen_resta = self.operaciones_logicas.aplicar_resta(self.imagen_display[0],self.imagen_display[1])
             if imagen_resta is not None:
@@ -642,7 +689,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
     def aplicar_multiplicacion_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
-            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+            self.mostrar_mensaje("Se necesita cargar las dos imagenes")
         else:
             imagen_mult = self.operaciones_logicas.aplicar_multiplicacion(self.imagen_display[0],self.imagen_display[1])
             if imagen_mult is not None:
@@ -654,7 +701,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
     def aplicar_and_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
-            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+            self.mostrar_mensaje("Se necesita cargar las dos imagenes")
         else:
             imagen_and = self.operaciones_logicas.aplicar_and(self.imagen_display[0],self.imagen_display[1])
             if imagen_and is not None:
@@ -667,7 +714,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
     def aplicar_or_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
-            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+            self.mostrar_mensaje("Se necesita cargar las dos imagenes")
         else:
             imagen_or = self.operaciones_logicas.aplicar_or(self.imagen_display[0],self.imagen_display[1])
             if imagen_or is not None:
@@ -679,7 +726,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
     def aplicar_xor_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
-            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+            self.mostrar_mensaje("Se necesita cargar las dos imagenes")
         else:
             imagen_xor = self.operaciones_logicas.aplicar_xor(self.imagen_display[0],self.imagen_display[1])
             if imagen_xor is not None:
@@ -690,13 +737,13 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen("Error al generar la imagen")
 
     def aplicar_not_gui(self):
-        if self.imagen_display[0] is None or self.imagen_display[1] is None:
-            self.mostrar_mensaje("Se necesita cargar dos imagenes")
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
         else:
-            imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0],self.imagen_display[1])
-            if imagen_suma is not None:
-                self.imagen_display[0] = imagen_suma
-                self.mostrar_imagen(self.panel_logicas,imagen_suma,"Imagen suma")
+            imagen_not = self.operaciones_logicas.aplicar_not(self.imagen_display[self.indice_actual])
+            if imagen_not is not None:
+                self.imagen_display[self.indice_actual] = imagen_not
+                self.mostrar_imagen(self.panel_logicas,imagen_not,"Operación NOT")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_imagen("Error al generar la imagen")
