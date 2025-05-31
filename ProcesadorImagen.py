@@ -31,8 +31,7 @@ class ProcesadorImagen:
     def convertir_a_grises(self, img):
         if img is None:
             return None
-        img = cv2.cvtColor(self.imagen_original, cv2.COLOR_BGR2GRAY)
-        return img
+        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     def aplicar_umbral(self):
         if self.imagen_grises is None:

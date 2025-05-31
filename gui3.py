@@ -582,10 +582,12 @@ class InterfazProcesadorImagenes(ctk.CTk):
             return
         try:
             # Convertir a escala de grises
-            if len(self.imagen_display[self.indice_actual]) == 3:
-                imagen_grises = cv2.cvtColor(self.imagen_display[self.indice_actual], cv2.COLOR_BGR2GRAY)
-            else:
-                imagen_grises = self.imagen_display[self.indice_actual].copy()
+            #if len(self.imagen_display[self.indice_actual]) == 3:
+            #    imagen_grises = cv2.cvtColor(self.imagen_display[self.indice_actual], cv2.COLOR_BGR2GRAY)
+            #else:
+            #    imagen_grises = self.imagen_display[self.indice_actual].copy()
+
+            imagen_grises = self.procesador.convertir_a_grises(self.imagen_display[self.indice_actual])
 
             self.imagen_display[self.indice_actual] = imagen_grises
             self.mostrar_imagen(self.panel_basico, imagen_grises, "Imagen en Escala de Grises")
