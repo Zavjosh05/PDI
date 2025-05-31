@@ -19,6 +19,7 @@ from ProcesadorImagen import *
 from librerias.FiltrosPasaBajas import *
 from librerias.FiltrosPasaAltas import *
 from librerias.AjustesDeBrillo import *
+from librerias.SliderWindow import *
 
 
 # Configuración del tema y apariencia
@@ -200,7 +201,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         # Botones de procesamiento
         botones_procesamiento = [
             ("🔳 Escala de Grises", self.convertir_a_grises),
-            ("📊 Aplicar Umbral", self.aplicar_umbral),
+            ("📊 Binarizar", self.aplicar_umbral),
             ("📈 Ecualización Hipercúbica", self.ecualizacion_hipercubica),
             ("📊 Calcular Histogramas", self.calcular_histogramas)
         ]
@@ -574,19 +575,16 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.mostrar_imagen(self.panel_basico, self.imagen_2, "Imagen 2")
         self.tabview.set("🔧 Básico")
         
-
-            
+    def eliminar_imagen_1(self):
+        if self.imagen_1 is None:
+            return
+        else:
+            self.imagen_1 = None
 
     def convertir_a_grises(self):
         if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
         try:
-            # Convertir a escala de grises
-            #if len(self.imagen_display[self.indice_actual]) == 3:
-            #    imagen_grises = cv2.cvtColor(self.imagen_display[self.indice_actual], cv2.COLOR_BGR2GRAY)
-            #else:
-            #    imagen_grises = self.imagen_display[self.indice_actual].copy()
-
             imagen_grises = self.procesador.convertir_a_grises(self.imagen_display[self.indice_actual])
 
             self.imagen_display[self.indice_actual] = imagen_grises
@@ -596,40 +594,42 @@ class InterfazProcesadorImagenes(ctk.CTk):
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_umbral(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
 
         try:
-            # Convertir a escala de grises si es necesario
-            if len(self.imagen_actual.shape) == 3:
-                imagen_gris = cv2.cvtColor(self.imagen_actual, cv2.COLOR_BGR2GRAY)
+            imagen_binarizada = self.procesador.convertir_a_grises(self.imagen_display[self.indice_actual])
+            slider = SliderWindow(
+                title="Seleccionar el umbral",
+                min_val=0,
+                max_val=255,
+                initial_val=127,
+                step=1
+                )
+            if slider.value is not None:
+                umbral = slider.value
             else:
-                imagen_gris = self.imagen_actual.copy()
+                return
+            
+            imagen_binarizada = self.procesador.aplicar_binarizacion(imagen_binarizada, umbral)
 
-            # Aplicar umbralización
-            _, imagen_umbral = cv2.threshold(imagen_gris, 127, 255, cv2.THRESH_BINARY)
-            #imagen_umbral = self.procesador.aplicar_umbral()
-
-            self.imagen_actual = imagen_umbral
-            self.mostrar_imagen(self.panel_basico, imagen_umbral, "Imagen Umbralizada")
+            self.imagen_display[self.indice_actual] = imagen_binarizada
+            self.mostrar_imagen(self.panel_basico, imagen_binarizada, f"Imagen binarizada\numbral de: {umbral}")
             self.tabview.set("🔧 Básico")
-            self.mostrar_mensaje("✅ Umbralización aplicada")
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     # Placeholders para otros métodos
     def ecualizacion_hipercubica(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
+        
         try:
-            imagen_ecualizada = self.procesador.ecualizacion_hipercubica()
+            imagen_ecualizada = self.procesador.ecualizacion_hipercubica(self.imagen_display[self.indice_actual])
             if imagen_ecualizada is not None:
                 self.imagen_actual = imagen_ecualizada
                 self.mostrar_imagen(self.panel_basico, imagen_ecualizada, "Imagen ecualizada con ecualización hipercubica")
                 self.tabview.set("🔧 Básico")
-                self.mostrar_mensaje("✅ Umbralización aplicada")
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 

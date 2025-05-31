@@ -20,25 +20,15 @@ class ProcesadorImagen:
             self.imagen_original = cv2.resize(self.imagen_original, (400, 400))
         return self.imagen_original
 
-    def aplicar_operaciones_aritmeticas(self):
-        if self.imagen_original is None:
-            return None, None, None
-        self.imagen_suma = cv2.add(self.imagen_original, 50)
-        self.imagen_resta = cv2.subtract(self.imagen_original, 50)
-        self.imagen_multiplicacion = cv2.multiply(self.imagen_original, 1.2)
-        return self.imagen_suma, self.imagen_resta, self.imagen_multiplicacion
-
     def convertir_a_grises(self, img):
         if img is None:
             return None
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    def aplicar_umbral(self):
-        if self.imagen_grises is None:
-            self.convertir_a_grises()
-        if self.imagen_grises is None:
-            return None
-        _, self.imagen_umbral = cv2.threshold(self.imagen_grises, 127, 255, cv2.THRESH_BINARY)
+    def aplicar_binarizacion(self, img, umbral):
+        
+
+        _, self.imagen_umbral = cv2.threshold(img, umbral, 255, cv2.THRESH_BINARY)
         return self.imagen_umbral
 
     def calcular_histogramas(self):
@@ -63,16 +53,12 @@ class ProcesadorImagen:
         
         return fig_gray, fig_color
 
-    def ecualizacion_hipercubica(self):
-        if self.imagen_grises is None:
-            self.convertir_a_grises()
-        if self.imagen_grises is None:
-            return None
+    def ecualizacion_hipercubica(self, img):
+        
+        g_min = np.min(img)
+        g_max = np.max(img)
 
-        g_min = np.min(self.imagen_grises)
-        g_max = np.max(self.imagen_grises)
-
-        histograma, _ = np.histogram(self.imagen_grises, bins=256, range=(0, 255))
+        histograma, _ = np.histogram(img, bins=256, range=(0, 255))
         probabilidades = histograma / np.sum(histograma)
         suma_acumulada = np.cumsum(probabilidades)
 
@@ -83,5 +69,5 @@ class ProcesadorImagen:
             ((cubo_max - cubo_min) * suma_acumulada[g] + cubo_min) ** 3 for g in range(256)
         ])
         tabla_transformacion = np.clip(tabla_transformacion, 0, 255).astype(np.uint8)
-        self.ecualizada_hipercubica = tabla_transformacion[self.imagen_grises]
-        return self.ecualizada_hipercubica
+        ecualizada_hipercubica = tabla_transformacion[img]
+        return ecualizada_hipercubica
