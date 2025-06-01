@@ -52,21 +52,4 @@ class ProcesadorImagen:
         
         return fig_gray, fig_color
 
-    def ecualizacion_hipercubica(self, img):
-        
-        g_min = np.min(img)
-        g_max = np.max(img)
-
-        histograma, _ = np.histogram(img, bins=256, range=(0, 255))
-        probabilidades = histograma / np.sum(histograma)
-        suma_acumulada = np.cumsum(probabilidades)
-
-        cubo_min = np.cbrt(g_min)
-        cubo_max = np.cbrt(g_max)
-
-        tabla_transformacion = np.array([
-            ((cubo_max - cubo_min) * suma_acumulada[g] + cubo_min) ** 3 for g in range(256)
-        ])
-        tabla_transformacion = np.clip(tabla_transformacion, 0, 255).astype(np.uint8)
-        ecualizada_hipercubica = tabla_transformacion[img]
-        return ecualizada_hipercubica
+    

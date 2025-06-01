@@ -18,6 +18,7 @@ from FiltrosSegmentacion import *
 from librerias.ProcesadorImagen import *
 from librerias.FiltrosPasaAltas import *
 from librerias.AjustesDeBrillo import *
+from librerias.Umbralizacion import *
 from librerias.SliderWindow import *
 
 
@@ -47,14 +48,13 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.filtros_segmentacion = FiltrosSegmentacion()
         self.ajustes_brillo = AjustesDeBrillo()
         self.filtros_pasa_altas = FiltrosPasaAltas()
+        self.umbralizacion = Umbralizacion()
 
         self.imagen_1 = None
         self.imagen_2 = None
         self.imagen_display = [None,None]
         self.imagen_1_hist = []
         self.imagen_2_hist = []
-        self.imagen_1_ind = False
-        self.imagen_2_ind = False
         self.indice_actual = 0
 
         self.crear_interfaz()
@@ -78,6 +78,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Sección de procesamiento básico
         self.crear_seccion_procesamiento()
+
+        # Sección de ajustes de brillo
+        self.crear_seccion_ajustes_de_brillo()
 
         # Sección de operaciones lógicas
         self.crear_seccion_logicas()
@@ -200,7 +203,6 @@ class InterfazProcesadorImagenes(ctk.CTk):
         botones_procesamiento = [
             ("🔳 Escala de Grises", self.convertir_a_grises),
             ("📊 Binarizar", self.aplicar_umbral),
-            ("📈 Ecualización Hipercúbica", self.ecualizacion_hipercubica),
             ("📊 Calcular Histogramas", self.calcular_histogramas)
         ]
 
@@ -218,10 +220,48 @@ class InterfazProcesadorImagenes(ctk.CTk):
         # Espaciado final
         ctk.CTkLabel(self.procesamiento_frame, text="").grid(row=len(botones_procesamiento) + 1, column=0, pady=(0, 15))
 
+    def crear_seccion_ajustes_de_brillo(self):
+        # Frame para procesamiento básico
+        self.ajustes_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.ajustes_frame.grid(row=3, column=0, padx=(20, 20), pady=10, sticky="ew")
+
+        # Título de la sección
+        self.ajustes_label = ctk.CTkLabel(
+            self.ajustes_frame,
+            text="🔦 Ajustes de brillo",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        self.ajustes_label.grid(row=0, column=0, padx=20, pady=(15, 10))
+
+        # Botones de procesamiento
+        botones_ajustes = [
+            ("🔳 Ecualización estandar", self.aplicar_ecualizacion_estandar),
+            ("📈 Ecualización Hipercúbica", self.ecualizacion_hipercubica),
+            ("📊 Corrección Gamma", self.aplicar_correccion_gamma),
+            ("📈 Expansión lineal de contraste", self.aplicar_expansion_lineal),
+            ("📊 Transformación exponencial", self.aplicar_transformacion_exponencial),
+            ("📈 Ecualización adaptativa",self.aplicar_ecualizacion_adaptativa),
+            ("📈 Transformación rayleigh",self.aplicar_transformacion_rayleigh)
+        ]
+
+        for i, (texto, comando) in enumerate(botones_ajustes):
+            btn = ctk.CTkButton(
+                self.ajustes_frame,
+                text=texto,
+                command=comando,
+                height=30,
+                fg_color="#445725",
+                hover_color="#000000"
+            )
+            btn.grid(row=i + 1, column=0, padx=20, pady=3, sticky="ew")
+
+        # Espaciado final
+        ctk.CTkLabel(self.ajustes_frame, text="").grid(row=len(botones_ajustes) + 1, column=0, pady=(0, 15))
+    
     def crear_seccion_logicas(self):
         # Frame para operaciones lógicas
         self.logicas_frame = ctk.CTkFrame(self.sidebar_frame)
-        self.logicas_frame.grid(row=3, column=0, padx=(20, 20), pady=10, sticky="ew")
+        self.logicas_frame.grid(row=4, column=0, padx=(20, 20), pady=10, sticky="ew")
 
         # Título de la sección
         self.logicas_label = ctk.CTkLabel(
@@ -256,7 +296,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
     def crear_seccion_ruido(self):
         # Frame para ruido y filtros
         self.ruido_frame = ctk.CTkFrame(self.sidebar_frame)
-        self.ruido_frame.grid(row=4, column=0, padx=(20, 20), pady=10, sticky="ew")
+        self.ruido_frame.grid(row=5, column=0, padx=(20, 20), pady=10, sticky="ew")
 
         # Título de la sección
         self.ruido_label = ctk.CTkLabel(
@@ -355,7 +395,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
     def crear_seccion_segmentacion(self):
         # Frame para segmentación
         self.segmentacion_frame = ctk.CTkFrame(self.sidebar_frame)
-        self.segmentacion_frame.grid(row=5, column=0, padx=(20, 20), pady=10, sticky="ew")
+        self.segmentacion_frame.grid(row=6, column=0, padx=(20, 20), pady=10, sticky="ew")
 
         # Título de la sección
         self.segmentacion_label = ctk.CTkLabel(
@@ -395,7 +435,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
     def crear_seccion_guardar(self):
         # Frame para guardar
         self.guardar_frame = ctk.CTkFrame(self.sidebar_frame)
-        self.guardar_frame.grid(row=6, column=0, padx=(20, 20), pady=10, sticky="ew")
+        self.guardar_frame.grid(row=7, column=0, padx=(20, 20), pady=10, sticky="ew")
 
         # Título de la sección
         self.guardar_label = ctk.CTkLabel(
@@ -633,7 +673,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
             return
         
         try:
-            imagen_ecualizada = self.procesador.ecualizacion_hipercubica(self.imagen_display[self.indice_actual])
+            imagen_ecualizada = self.ajustes_brillo.ecualizacion_hipercubica(self.imagen_display[self.indice_actual])
             if imagen_ecualizada is not None:
                 self.imagen_actual = imagen_ecualizada
                 self.mostrar_imagen(self.panel_basico, imagen_ecualizada, "Imagen ecualizada con ecualización hipercubica")
@@ -659,6 +699,85 @@ class InterfazProcesadorImagenes(ctk.CTk):
         histograma_color = FigureCanvasTkAgg(hist_color, master=self.panel_histogramas)
         histograma_color.draw()
         histograma_color.get_tk_widget().grid(row=0,column=1,padx=10,pady=10,sticky="nsew")
+
+    def aplicar_ecualizacion_estandar(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_ecualizacion = self.ajustes_brillo.ecualizacion_de_histograma(img=self.imagen_display[self.indice_actual])
+            if imagen_ecualizacion is not None:
+                self.imagen_display[self.indice_actual] = imagen_ecualizacion
+                self.mostrar_imagen(self.panel_basico, imagen_ecualizacion, f"Imagen {self.indice_actual+1}\n con ecualización estandar")
+                self.tabview.set("🔧 Básico")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+    
+    def aplicar_correccion_gamma(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_gamma = self.ajustes_brillo.correccion_gamma(img=self.imagen_display[self.indice_actual])
+            if imagen_gamma is not None:
+                self.imagen_display[self.indice_actual] = imagen_gamma
+                self.mostrar_imagen(self.panel_basico, imagen_gamma, f"Imagen {self.indice_actual+1}\n con corrección gamma")
+                self.tabview.set("🔧 Básico")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_expansion_lineal(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_expansion = self.ajustes_brillo.expansion_lineal_de_contraste(img=self.imagen_display[self.indice_actual])
+            if imagen_expansion is not None:
+                self.imagen_display[self.indice_actual] = imagen_expansion
+                self.mostrar_imagen(self.panel_basico, imagen_expansion, f"Imagen {self.indice_actual+1}\n con expansión lineal")
+                self.tabview.set("🔧 Básico")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_transformacion_exponencial(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_transformacion = self.ajustes_brillo.transformacion_exponencial(img=self.imagen_display[self.indice_actual])
+            if imagen_transformacion is not None:
+                self.imagen_display[self.indice_actual] = imagen_transformacion
+                self.mostrar_imagen(self.panel_basico, imagen_transformacion, f"Imagen {self.indice_actual+1}\n con transformación exponencial")
+                self.tabview.set("🔧 Básico")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_ecualizacion_adaptativa(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_ecualizacion = self.ajustes_brillo.ecualizacion_adaptativa(img=self.imagen_display[self.indice_actual])
+            if imagen_ecualizacion is not None:
+                self.imagen_display[self.indice_actual] = imagen_ecualizacion
+                self.mostrar_imagen(self.panel_basico, imagen_ecualizacion, f"Imagen {self.indice_actual+1}\n con ecualización adaptativa")
+                self.tabview.set("🔧 Básico")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_transformacion_rayleigh(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_ecualizacion = self.ajustes_brillo.transformacion_rayleigh(img=self.imagen_display[self.indice_actual])
+            if imagen_ecualizacion is not None:
+                self.imagen_display[self.indice_actual] = imagen_ecualizacion
+                self.mostrar_imagen(self.panel_basico, imagen_ecualizacion, f"Imagen {self.indice_actual+1}\n con ecualización estandar")
+                self.tabview.set("🔧 Básico")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
 
     def agregar_ruido_sal_pimienta(self):
         if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
@@ -984,35 +1103,145 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_mensaje("Error al generar la imagen Filtro Operador Laplaciano")
         return
 
-
-    def aplicar_segmentacion_filtro_Robert(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+    def aplicar_umbral_media(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
         
-        self.filtros_segmentacion.imagen_original = self.imagen_actual
         try:
-            imagen_filtrada = self.filtros_segmentacion.filtro_Robert()
-            if imagen_filtrada is not None:
-                self.imagen_actual = imagen_filtrada
-                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Filtro de Robert")
-                self.tabview("✂️ Segmentación")
-
+            umbral_media = self.umbralizacion.umbral_media(img=self.imagen_display[self.indice_actual])
+            if umbral_media is not None:
+                self.imagen_display[self.indice_actual] = umbral_media
+                self.mostrar_imagen(self.panel_segmentacion, umbral_media, f"Imagen {self.indice_actual+1}Umbral media")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar el umbral media sobre la imagen {self.indice_actual+1}")
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_filtro_otsu(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
         
-        self.filtros_segmentacion.imagen_original = self.imagen_actual
         try:
-            imagen_filtrada = self.filtros_segmentacion.filtro_otsu()
+            imagen_filtrada = self.umbralizacion.metodo_otsu(img=self.imagen_display[self.indice_actual])
             if imagen_filtrada is not None:
                 self.imagen_actual = imagen_filtrada
                 self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Filtro de Otsu")
-                self.tabview("✂️ Segmentación")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar el filtro de otsu a la imagen {self.indice_actual+1}")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_multiubralizacion(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_filtrada = self.umbralizacion.multiumbralizacion(img=self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Multiubralizacion")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar multiubralizacion a la imagen {self.indice_actual+1}")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_entropia_kapur(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_filtrada = self.umbralizacion.entropia_kapur(img=self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Entropia de Kapur")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar la entropia de Kapur a la imagen {self.indice_actual+1}")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_umbral_banda(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_filtrada = self.umbralizacion.umbral_por_banda(img=self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Umbral por banda")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar el umbral por banda a la imagen {self.indice_actual+1}")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_umbral_adaptativo(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_filtrada = self.umbralizacion.umbral_adaptativo(img=self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Umbral adaptativo")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar el umbral adaptativo a la imagen {self.indice_actual+1}")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_minimo_en_el_histograma(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_filtrada = self.umbralizacion.minimo_del_histograma(img=self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Minimo en el histograma")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar el minimo en el histograma a la imagen {self.indice_actual+1}")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_segmentacion_filtro_Robert(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_filtrada = self.umbralizacion.filtro_Robert(img=self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Filtro de Roberts")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar el filtro de Roberts a la imagen {self.indice_actual+1}")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_vecindad_8(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        try:
+            imagen_filtrada = self.umbralizacion.vecindad_8(img=self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_actual = imagen_filtrada
+                self.mostrar_imagen(self.panel_segmentacion, imagen_filtrada, "Minimo en el histograma")
+                self.tabview.set("✂️ Segmentación")
+            else:
+                self.mostrar_imagen(f"Error al aplicar el minimo en el histograma a la imagen {self.indice_actual+1}")
 
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
