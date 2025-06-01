@@ -12,9 +12,10 @@ import os
 #importacion de clases
 from OperacionesLogicas2 import * 
 from Ruido import * 
-from Filtros import *
+from Filtros_Bajas import *
 from FiltrosSegmentacion import * 
 from ProcesadorImagen import * 
+from librerias.FiltrosPasaAltas import * 
 
 
 class InterfazProcesadorImagenes(tk.Tk):

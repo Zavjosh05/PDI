@@ -13,7 +13,7 @@ from PIL import Image, ImageTk
 # Importacion de librerías personales
 from OperacionesLogicas2 import *
 from Ruido import *
-from Filtros import *
+from Filtros_Bajas import *
 from FiltrosSegmentacion import *
 from ProcesadorImagen import *
 from librerias.FiltrosPasaBajas import *
@@ -330,13 +330,13 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.filtros_sub_label.grid(row=i + len(ruido_botones) + 4, column=0, padx=20, pady=(10, 5))
 
         filtros_botones_pa = [
-            ("📈 Robinson", self.aplicar_filtro_promediador),
-            ("📈 Robert", self.aplicar_filtro_pesado),
-            ("📈 Prewitt", self.aplicar_filtro_mediana),
-            ("📈 Sobel", self.aplicar_filtro_Moda),
-            ("📈 Kirch",None),
-            ("📈 Canny",None),
-            ("📈 Op. Lapaciano",None)
+            ("📈 Robinson", self.aplicar_filtro_Robinson),
+            ("📈 Robert", self.aplicar_filtro_Robert),
+            ("📈 Prewitt", self.aplicar_filtro_Prewitt),
+            ("📈 Sobel", self.aplicar_filtro_Sobel),
+            ("📈 Kirsch",self.aplicar_filtro_Kirch),
+            ("📈 Canny",self.aplicar_filtro_Canny),
+            ("📈 Op. Laplaciano",self.aplicar_Operador_Laplaciano)
         ]
 
         for i, (texto, comando) in enumerate(filtros_botones_pa):
@@ -369,7 +369,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Botones de segmentación
         segmentacion_botones = [
-            ("🎯 Umbral Media", self.aplicar_filtro_Robert),
+            ("🎯 Umbral Media", self.aplicar_segmentacion_filtro_Robert),
             ("🎯 Método de Otsu", self.aplicar_filtro_otsu),
             ("🎯 Multiumbralización", self.aplicar_filtro_otsu),
             ("🎯 Entropía Kapur", self.aplicar_filtro_otsu),
@@ -651,7 +651,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.tabview.set("📊 Histogramas")
         self.limpiar_pestana("panel_histogramas")
 
-        hist_gris, hist_color = self.procesador.calcular_histogramas(self.imagen_display[self.indice_actual])
+        imagen_a_calcular = self.imagen_actual 
+        hist_gris, hist_color = self.procesador.calcular_histogramas(imagen_a_calcular)
 
         histograma_gris = FigureCanvasTkAgg(hist_gris, master=self.panel_histogramas)
         histograma_gris.draw()
@@ -697,7 +698,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen(self.panel_logicas,imagen_suma,"Operación suma")
                 self.tabview.set("🔗 Lógicas")
             else:
-                self.mostrar_imagen("Error al generar la imagen")
+                self.mostrar_mensaje("Error al generar la imagen")
                 
     def aplicar_resta_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
@@ -709,7 +710,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen(self.panel_logicas,imagen_resta,"Operación resta")
                 self.tabview.set("🔗 Lógicas")
             else:
-                self.mostrar_imagen("Error al generar la imagen")
+                self.mostrar_mensaje("Error al generar la imagen")
 
     def aplicar_multiplicacion_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
@@ -721,7 +722,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen(self.panel_logicas,imagen_mult,"Operación multiplicación")
                 self.tabview.set("🔗 Lógicas")
             else:
-                self.mostrar_imagen("Error al generar la imagen")
+                self.mostrar_mensaje("Error al generar la imagen")
 
     def aplicar_and_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
@@ -733,7 +734,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen(self.panel_logicas,imagen_and,"Operación AND")
                 self.tabview.set("🔗 Lógicas")
             else:
-                self.mostrar_imagen("Error al generar la imagen")
+                self.mostrar_mensaje("Error al generar la imagen")
 
 
     def aplicar_or_gui(self):
@@ -746,7 +747,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen(self.panel_logicas,imagen_or,"Operación OR")
                 self.tabview.set("🔗 Lógicas")
             else:
-                self.mostrar_imagen("Error al generar la imagen")
+                self.mostrar_mensaje("Error al generar la imagen")
 
     def aplicar_xor_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
@@ -758,7 +759,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen(self.panel_logicas,imagen_xor,"Operación XOR")
                 self.tabview.set("🔗 Lógicas")
             else:
-                self.mostrar_imagen("Error al generar la imagen")
+                self.mostrar_mensaje("Error al generar la imagen")
 
     def aplicar_not_gui(self):
         if self.imagen_display[self.indice_actual] is None:
@@ -770,14 +771,16 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen(self.panel_logicas,imagen_not,"Operación NOT")
                 self.tabview.set("🔗 Lógicas")
             else:
-                self.mostrar_imagen("Error al generar la imagen")
+                self.mostrar_mensaje("Error al generar la imagen")
     
     def aplicar_filtro_promediador(self):
         if self.imagen_display[self.indice_actual] is None:
             self.mostrar_mensaje("Se necesita cargar la imagen")
         else:
-            dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
-            text = dialog.get_input()  
+            dialog = ctk.CTkInputDialog(text="Seleccione el numero n del kernel", title="kernel")
+            text = dialog.get_input()
+            if text is None:
+                return 
             print("imput ingresado" + text )
             imagen_filtrada = self.filtro.filtro_promediador(self.imagen_display[self.indice_actual],text)
             if imagen_filtrada is not None:
@@ -786,7 +789,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.tabview.set("🔊 Ruido/Filtros")
                
             else:
-                self.mostrar_imagen("Error al generar la imagen Filtro promediador")
+                self.mostrar_mensaje("Error al generar la imagen Filtro promediador")
                 
     def aplicar_filtro_pesado(self):
         if self.imagen_display[self.indice_actual] is None:
@@ -799,7 +802,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.tabview.set("🔊 Ruido/Filtros")
                
             else:
-                self.mostrar_imagen("Error al generar la imagen Filtro pesado")
+                self.mostrar_mensaje("Error al generar la imagen Filtro pesado")
     
     def aplicar_filtro_mediana(self):
         if self.imagen_display[self.indice_actual] is None:
@@ -812,7 +815,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.tabview.set("🔊 Ruido/Filtros")
                
             else:
-                self.mostrar_imagen("Error al generar la imagen Filtro Mediana")
+                self.mostrar_mensaje("Error al generar la imagen Filtro Mediana")
 
     def aplicar_filtro_Moda(self):
         if self.imagen_display[self.indice_actual] is None:
@@ -825,7 +828,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.tabview.set("🔊 Ruido/Filtros")
                
             else:
-                self.mostrar_imagen("Error al generar la imagen Filtro Moda")
+                self.mostrar_mensaje("Error al generar la imagen Filtro Moda")
 
     def aplicar_filtro_bilateral(self):
         if self.imagen_display[self.indice_actual] is None:
@@ -838,13 +841,35 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.tabview.set("🔊 Ruido/Filtros")
                
             else:
-                self.mostrar_imagen("Error al generar la imagen Filtro Bilateral")
+                self.mostrar_mensaje("Error al generar la imagen Filtro Bilateral")
         return
     
     def aplicar_filtro_max(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtro.filtro_max(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Maximo")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Filtro Maximo ")
         return
     
     def aplicar_filtro_min(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtro.filtro_min(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro minimo")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Filtro minimo ")
         return
 
     def aplicar_filtro_gaussiano(self):
@@ -858,10 +883,111 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.tabview.set("🔊 Ruido/Filtros")
                
             else:
-                self.mostrar_imagen("Error al generar la imagen Filtro Gaussiano")
+                self.mostrar_mensaje("Error al generar la imagen Filtro Gaussiano")
+        return
+    
+    
+    def aplicar_filtro_Robinson(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtros_pasa_altas.filtro_robinson(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Operador Robinson")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Filtro Operador Robinson")
+        return
+    
+    def aplicar_filtro_Robert(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtros_pasa_altas.operador_robert(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Operador Robert")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Filtro Operador Robert")
+        return
+    
+    def aplicar_filtro_Prewitt(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtros_pasa_altas.operador_prewitt(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Operador Prewitt")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Operador Prewitt")
+        return
+    
+    def aplicar_filtro_Sobel(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtros_pasa_altas.operador_sobel(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Operador Sobel")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Filtro Operador Sobel")
+        return
+    
+    def aplicar_filtro_Kirch(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtros_pasa_altas.operador_kirsch(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Operador Kirsch")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Filtro Operador Kirsch")
+        return
+    
+    def aplicar_filtro_Canny(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtros_pasa_altas.operador_canny(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Operador Canny")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Filtro Operador Canny")
+        return
+    
+    def aplicar_Operador_Laplaciano(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtros_pasa_altas.operador_laplaciano(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Operador Laplaciano")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_mensaje("Error al generar la imagen Filtro Operador Laplaciano")
         return
 
-    def aplicar_filtro_Robert(self):
+
+    def aplicar_segmentacion_filtro_Robert(self):
         if self.imagen_actual is None:
             self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
             return
@@ -919,6 +1045,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
     def mostrar_imagen(self, panel, imagen, titulo):
         # Limpiar panel
+
+        self.imagen_actual = imagen
         for widget in panel.winfo_children():
             widget.destroy()
 

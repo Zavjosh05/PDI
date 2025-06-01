@@ -6,7 +6,8 @@ class FiltrosPasaAltas:
     def __init__(self):
         self.imagen_original = None
     # 1. Operador Robinson (8 direcciones)
-    def robinson_filter(self, img):
+    def filtro_robinson(self, img):
+        print("aplicando filtro de robinson")
         kernels = [
             np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]),  # Norte
             np.array([[-2, -1, 0], [-1, 0, 1], [0, 1, 2]]),   # Noreste
@@ -25,6 +26,7 @@ class FiltrosPasaAltas:
 
 # 2. Operador Robert
     def operador_robert(self, img):
+        print("aplicando filtro Operador de Robert")
         roberts_x = np.array([[1, 0], [0, -1]])
         roberts_y = np.array([[0, 1], [-1, 0]])
         roberts_x_img = cv2.filter2D(img, cv2.CV_16S, roberts_x)
@@ -34,6 +36,7 @@ class FiltrosPasaAltas:
 
 # 3. Operador Prewitt
     def operador_prewitt(self, img):
+        print("aplicando filtro Operador de Prewitt")
         prewitt_x = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
         prewitt_y = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
         prewitt_x_img = cv2.filter2D(img, cv2.CV_16S, prewitt_x)
@@ -43,13 +46,16 @@ class FiltrosPasaAltas:
 
 # 4. Operador Sobel
     def operador_sobel(self,img):
+        print("aplicando filtro Operador de Sobel")
         sobel_x = cv2.Sobel(img, cv2.CV_16S, 1, 0, ksize=3)
         sobel_y = cv2.Sobel(img, cv2.CV_16S, 0, 1, ksize=3)
         img_sobel = cv2.convertScaleAbs(cv2.addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0))
         return img_sobel
 
 # 5. Operador Kirsch (8 direcciones)
-    def kirsch_filter(img):
+    def operador_kirsch(self,img):
+        print("aplicando filtro Operador de Kirsch")
+
         kernels = [
             np.array([[-3, -3, 5], [-3, 0, 5], [-3, -3, 5]]),   # Norte
             np.array([[-3, 5, 5], [-3, 0, 5], [-3, -3, -3]]),    # Noreste
@@ -68,11 +74,15 @@ class FiltrosPasaAltas:
 
 
 # 6. Detector Canny
-    def detector_canny(self, img):
-        img_canny = cv2.Canny(img, 100, 200)
+    def operador_canny(self, img):
+        print("aplicando filtro Operador de Canny")
 
+        img_canny = cv2.Canny(img, 100, 200)
+        return img_canny
 # 7. Operador Laplaciano
     def operador_laplaciano(self, img):
+        print("aplicando  Operador Laplaciano")
+
         laplacian = cv2.Laplacian(img, cv2.CV_16S, ksize=3)
         img_laplacian = cv2.convertScaleAbs(laplacian)
         return img_laplacian

@@ -27,13 +27,6 @@ class Filtros:
         imagen_promediador_pesado = cv2.filter2D(imagen_original, -1, kernel)
         return imagen_promediador_pesado
     
-    def filtro_gaussiano(self, imagen_original):
-        print("aplicando filtro gaussiano")
-        if imagen_original is None:
-            return None
-        imagen_gaussiana = cv2.GaussianBlur(imagen_original, (5,5), 1)
-        return imagen_gaussiana
-    
     def filtro_mediana(self, imagen_original):
         print("aplicando filtro mediana")
         if imagen_original is None:
@@ -70,4 +63,21 @@ class Filtros:
         image_bilateral = cv2.bilateralFilter(imagen_original, 9, 75, 75)
         return image_bilateral
     
+    def filtro_max(self, img):
+        print("aplicando filtro Maximo")
+        kernel_size = 3
+        img_maximo = cv2.dilate(img, np.ones((kernel_size,kernel_size)))
+        return img_maximo
     
+    def filtro_min(self, img):
+        print("aplicando filtro Minimo")
+        kernel_size = 3 
+        img_minimo = cv2.erode(img, np.ones((kernel_size,kernel_size)))
+        return img_minimo
+    
+    def filtro_gaussiano(self, imagen_original):
+        print("aplicando filtro gaussiano")
+        if imagen_original is None:
+            return None
+        imagen_gaussiana = cv2.GaussianBlur(imagen_original, (5,5), 1)
+        return imagen_gaussiana
