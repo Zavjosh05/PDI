@@ -23,30 +23,29 @@ class ProcesadorImagen:
     def convertir_a_grises(self, img):
         if img is None:
             return None
-        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        if len(img.shape) == 2 or (len(img.shape) == 3 and img.shape[2] == 1):
+            return img
+        else:
+            return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     def aplicar_binarizacion(self, img, umbral):
+        _, imagen_binarizada = cv2.threshold(img, umbral, 255, cv2.THRESH_BINARY)
+        return imagen_binarizada
+
+    def calcular_histogramas(self, img):
+        imagen_en_gris = self.convertir_a_grises(img)
         
-
-        _, self.imagen_umbral = cv2.threshold(img, umbral, 255, cv2.THRESH_BINARY)
-        return self.imagen_umbral
-
-    def calcular_histogramas(self):
-        if self.imagen_grises is None:
-            self.convertir_a_grises()
-        if self.imagen_grises is None:
-            return None, None
-
         # Histograma en escala de grises
         fig_gray = plt.figure(figsize=(4, 3))
-        plt.hist(self.imagen_grises.ravel(), 256, [0, 256])
+        plt.hist(imagen_en_gris.ravel(), 256, [0, 256])
         plt.title('Histograma en Escala de Grises')
 
         # Histograma por canales de color
         fig_color = plt.figure(figsize=(4, 3))
         colores = ('b', 'g', 'r')
         for i, canal in enumerate(colores):
-            histograma = cv2.calcHist([self.imagen_original], [i], None, [256], [0, 256])
+            histograma = cv2.calcHist([img], [i], None, [256], [0, 256])
             plt.plot(histograma, color=canal)
         plt.title('Histograma de la Imagen en Color')
         plt.xlim([0, 256])

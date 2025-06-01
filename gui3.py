@@ -146,7 +146,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         botones_carga_imagen1 = [
             ("🖼️ Cargar", self.cargar_imagen_1),
-            ("🗑️ Eliminar",None),
+            ("🗑️ Eliminar",self.eliminar_imagen_1),
             ("🧊 Restablecer",self.restablecer_imagen_1)
         ]
 
@@ -171,7 +171,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         botones_carga_imagen2 = [
             ("🖼️ Cargar", self.cargar_imagen_2),
-            ("🗑️ Eliminar",None),
+            ("🗑️ Eliminar",self.eliminar_imagen_2),
             ("🧊 Restablecer",self.restablecer_imagen_2)
         ]
 
@@ -577,9 +577,19 @@ class InterfazProcesadorImagenes(ctk.CTk):
         
     def eliminar_imagen_1(self):
         if self.imagen_1 is None:
+            self.mostrar_mensaje("No se ha cargado ninguna imagen")
             return
         else:
             self.imagen_1 = None
+            self.limpiar_pestana("panel_basico")
+
+    def eliminar_imagen_2(self):
+        if self.imagen_2 is None:
+            self.mostrar_mensaje("No se ha cargado ninguna imagen")
+            return
+        else:
+            self.imagen_2 = None
+            self.limpiar_pestana("panel_basico")
 
     def convertir_a_grises(self):
         if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
@@ -634,7 +644,22 @@ class InterfazProcesadorImagenes(ctk.CTk):
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def calcular_histogramas(self):
-        self.mostrar_mensaje("🔧 Función en desarrollo")
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+        
+        #self.limpiar_frame(self.panel_basico)
+        self.tabview.set("📊 Histogramas")
+        self.limpiar_pestana("panel_histogramas")
+
+        hist_gris, hist_color = self.procesador.calcular_histogramas(self.imagen_display[self.indice_actual])
+
+        histograma_gris = FigureCanvasTkAgg(hist_gris, master=self.panel_histogramas)
+        histograma_gris.draw()
+        histograma_gris.get_tk_widget().grid(row=0,column=0,padx=10,pady=10,sticky="nsew")
+
+        histograma_color = FigureCanvasTkAgg(hist_color, master=self.panel_histogramas)
+        histograma_color.draw()
+        histograma_color.get_tk_widget().grid(row=0,column=1,padx=10,pady=10,sticky="nsew")
 
     def agregar_ruido_sal_pimienta(self):
         if self.imagen_actual is None:
@@ -986,6 +1011,18 @@ class InterfazProcesadorImagenes(ctk.CTk):
         )
         btn_ok.pack(pady=20)
 
+    def limpiar_frame(self,frame):
+        for widget in frame.winfo_children:
+            widget.destroy()
+
+    def limpiar_pestana(self, nombre_panel: str):
+        panel = getattr(self, nombre_panel, None)
+
+        if panel is not None:
+            for widget in panel.winfo_children():
+                widget.destroy()
+        else:
+            self.mostrar_mensaje("Error al eliminar frame")
 
 if __name__ == "__main__":
     app = InterfazProcesadorImagenes()
