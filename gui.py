@@ -10,11 +10,11 @@ from tkinter import filedialog, ttk
 import os
 
 #importacion de clases
-from OperacionesLogicas2 import * 
+from librerias.OperacionesLogicas2 import * 
 from Ruido import * 
-from Filtros_Bajas import *
+from librerias.Filtros_Bajas import *
 from FiltrosSegmentacion import * 
-from ProcesadorImagen import * 
+from librerias.ProcesadorImagen import * 
 from librerias.FiltrosPasaAltas import * 
 
 

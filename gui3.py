@@ -11,12 +11,11 @@ import os
 from PIL import Image, ImageTk
 
 # Importacion de librerías personales
-from OperacionesLogicas2 import *
-from Ruido import *
-from Filtros_Bajas import *
+from librerias.OperacionesLogicas2 import *
+from librerias.Ruido import *
+from librerias.Filtros_Bajas import *
 from FiltrosSegmentacion import *
-from ProcesadorImagen import *
-from librerias.FiltrosPasaBajas import *
+from librerias.ProcesadorImagen import *
 from librerias.FiltrosPasaAltas import *
 from librerias.AjustesDeBrillo import *
 from librerias.SliderWindow import *
@@ -47,7 +46,6 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.filtro = Filtros()
         self.filtros_segmentacion = FiltrosSegmentacion()
         self.ajustes_brillo = AjustesDeBrillo()
-        self.filtros_pasa_bajas = FiltrosPasaBajas()
         self.filtros_pasa_altas = FiltrosPasaAltas()
 
         self.imagen_1 = None
