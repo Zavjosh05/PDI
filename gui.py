@@ -11,7 +11,7 @@ import os
 
 #importacion de clases
 from librerias.OperacionesLogicas2 import * 
-from Ruido import * 
+from librerias.Ruido import * 
 from librerias.Filtros_Bajas import *
 from FiltrosSegmentacion import * 
 from librerias.ProcesadorImagen import * 
