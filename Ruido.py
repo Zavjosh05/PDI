@@ -11,10 +11,10 @@ class Ruido:
             self.imagen_original = cv2.resize(self.imagen_original, (400, 400))
         return self.imagen_original
 
-    def agregar_ruido_sal_pimienta(self, cantidad=0.05):
-        if self.imagen_original is None:
+    def agregar_ruido_sal_pimienta(self, img, cantidad=0.05):
+        if img is None:
             return None
-        salida = np.copy(self.imagen_original)
+        salida = np.copy(img)
         num_pixeles = int(cantidad * salida.shape[0] * salida.shape[1])
         # Añadir ruido sal
         coords_x = np.random.randint(0, salida.shape[0], num_pixeles)
@@ -26,9 +26,9 @@ class Ruido:
         salida[coords_x, coords_y] = 0
         return salida
 
-    def agregar_ruido_gaussiano(self, media=0, sigma=25):
-        if self.imagen_original is None:
+    def agregar_ruido_gaussiano(self, img, media=0, sigma=25):
+        if img is None:
             return None
         gauss = np.random.normal(media, sigma, self.imagen_original.shape).astype(np.uint8)
-        salida = cv2.add(self.imagen_original, gauss)
+        salida = cv2.add(img, gauss)
         return salida

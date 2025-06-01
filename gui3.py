@@ -662,29 +662,27 @@ class InterfazProcesadorImagenes(ctk.CTk):
         histograma_color.get_tk_widget().grid(row=0,column=1,padx=10,pady=10,sticky="nsew")
 
     def agregar_ruido_sal_pimienta(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
         
         try:
-            imagen_ruido = self.ruido.agregar_ruido_sal_pimienta()
+            imagen_ruido = self.ruido.agregar_ruido_sal_pimienta(img=self.imagen_display[self.indice_actual])
             if imagen_ruido is not None:
-                self.imagen_actual = imagen_ruido
+                self.imagen_display[self.indice_actual] = imagen_ruido
                 self.mostrar_imagen(self.panel_ruido, imagen_ruido, "Imagen con ruido sal y pimienta")
                 self.tabview("🔊 Ruido/Filtros")
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def agregar_ruido_gaussiano(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
         
         try:
 
-            imagen_ruido = self.ruido.agregar_ruido_gaussiano()
+            imagen_ruido = self.ruido.agregar_ruido_gaussiano(img=self.imagen_display[self.indice_actual])
             if imagen_ruido is not None:
-                self.imagen_actual = imagen_ruido
+                self.imagen_display[self.indice_actual] = imagen_ruido
                 self.mostrar_imagen(self.panel_ruido, imagen_ruido, "Imagen con ruido gaussiano")
                 self.tabview("🔊 Ruido/Filtros")
         except Exception as e:
