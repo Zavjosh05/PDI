@@ -29,6 +29,6 @@ class Ruido:
     def agregar_ruido_gaussiano(self, img, media=0, sigma=25):
         if img is None:
             return None
-        gauss = np.random.normal(media, sigma, self.imagen_original.shape).astype(np.uint8)
+        gauss = np.random.normal(media, sigma, img.shape).astype(np.uint8)
         salida = cv2.add(img, gauss)
         return salida

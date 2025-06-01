@@ -670,7 +670,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
             if imagen_ruido is not None:
                 self.imagen_display[self.indice_actual] = imagen_ruido
                 self.mostrar_imagen(self.panel_ruido, imagen_ruido, f"Imagen {self.indice_actual+1} con ruido sal y pimienta")
-                self.tabview("🔊 Ruido/Filtros")
+                self.tabview.set("🔊 Ruido/Filtros")
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
@@ -679,12 +679,11 @@ class InterfazProcesadorImagenes(ctk.CTk):
             return
         
         try:
-
             imagen_ruido = self.ruido.agregar_ruido_gaussiano(img=self.imagen_display[self.indice_actual])
             if imagen_ruido is not None:
                 self.imagen_display[self.indice_actual] = imagen_ruido
                 self.mostrar_imagen(self.panel_ruido, imagen_ruido, f"Imagen {self.indice_actual+1} con ruido gaussiano")
-                self.tabview("🔊 Ruido/Filtros")
+                self.tabview.set("🔊 Ruido/Filtros")
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
