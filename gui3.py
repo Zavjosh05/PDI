@@ -305,9 +305,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
             ("📈 Pesado", self.aplicar_filtro_pesado),
             ("📈 Mediana", self.aplicar_filtro_mediana),
             ("📈 Moda", self.aplicar_filtro_Moda),
-            ("📈 Bilateral",None),
-            ("📈 Max",None),
-            ("📈 Min",None),
+            ("📈 Bilateral",self.aplicar_filtro_bilateral),
+            ("📈 Max",self.aplicar_filtro_max),
+            ("📈 Min",self.aplicar_filtro_min),
             ("📈 Gaussiano", self.aplicar_filtro_gaussiano)
         ]
 
@@ -773,69 +773,72 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 self.mostrar_imagen("Error al generar la imagen")
     
     def aplicar_filtro_promediador(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
-            return
-        
-        try:
-            imagen_filtrada = self.filtro.filtro_promediador()
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
+            text = dialog.get_input()  
+            print("imput ingresado" + text )
+            imagen_filtrada = self.filtro.filtro_promediador(self.imagen_display[self.indice_actual],text)
             if imagen_filtrada is not None:
-                self.imagen_actual = imagen_filtrada
-                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro promediador")
-                self.tabview("🔊 Ruido/Filtros")
-
-        except Exception as e:
-            self.mostrar_mensaje(f"❌ Error: {str(e)}")
-
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro promediador")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_imagen("Error al generar la imagen Filtro promediador")
+                
     def aplicar_filtro_pesado(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
-            return
-        
-        try:
-            imagen_filtrada = self.filtro.filtro_pesado()
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtro.filtro_pesado(self.imagen_display[self.indice_actual])
             if imagen_filtrada is not None:
-                self.imagen_actual = imagen_filtrada
-                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro promediador pesado")
-                self.tabview("🔊 Ruido/Filtros")
-
-        except Exception as e:
-            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro pesado")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_imagen("Error al generar la imagen Filtro pesado")
     
     def aplicar_filtro_mediana(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
-            return
-        
-        try:
-            imagen_filtrada = self.filtro.filtro_mediana()
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtro.filtro_mediana(self.imagen_display[self.indice_actual])
             if imagen_filtrada is not None:
-                self.imagen_actual = imagen_filtrada
-                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro mediana")
-                self.tabview("🔊 Ruido/Filtros")
-
-        except Exception as e:
-            self.mostrar_mensaje(f"❌ Error: {str(e)}")
-
-        except Exception as e:
-            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Mediana")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_imagen("Error al generar la imagen Filtro Mediana")
 
     def aplicar_filtro_Moda(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
-            return
-        
-        try:
-            imagen_filtrada = self.filtro.filtro_moda()
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtro.filtro_moda(self.imagen_display[self.indice_actual])
             if imagen_filtrada is not None:
-                self.imagen_actual = imagen_filtrada
-                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro moda")
-                self.tabview("🔊 Ruido/Filtros")
-
-        except Exception as e:
-            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Moda")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_imagen("Error al generar la imagen Filtro Moda")
 
     def aplicar_filtro_bilateral(self):
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtro.filtro_bilateral(self.imagen_display[self.indice_actual])
+            if imagen_filtrada is not None:
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Bilateral")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_imagen("Error al generar la imagen Filtro Bilateral")
         return
     
     def aplicar_filtro_max(self):
@@ -845,19 +848,18 @@ class InterfazProcesadorImagenes(ctk.CTk):
         return
 
     def aplicar_filtro_gaussiano(self):
-        if self.imagen_actual is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
-            return
-        
-        try:
-            imagen_filtrada = self.filtro.filtro_gaussiano()
+        if self.imagen_display[self.indice_actual] is None:
+            self.mostrar_mensaje("Se necesita cargar la imagen")
+        else:
+            imagen_filtrada = self.filtro.filtro_gaussiano(self.imagen_display[self.indice_actual])
             if imagen_filtrada is not None:
-                self.imagen_actual = imagen_filtrada
-                self.mostrar_imagen(self.panel_ruido, imagen_filtrada, "Imagen filtrada con filtro promediador")
-                self.tabview("🔊 Ruido/Filtros")
-
-        except Exception as e:
-            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+                self.imagen_display[self.indice_actual] = imagen_filtrada
+                self.mostrar_imagen(self.panel_ruido,imagen_filtrada,"Filtro Gaussiano")
+                self.tabview.set("🔊 Ruido/Filtros")
+               
+            else:
+                self.mostrar_imagen("Error al generar la imagen Filtro Gaussiano")
+        return
 
     def aplicar_filtro_Robert(self):
         if self.imagen_actual is None:

@@ -5,46 +5,48 @@ from scipy import stats
 
 #En esta claser iran los filtros de pasa altas y pasa bajas
 class Filtros:
-    def __init__(self, imagen=None):
-        self.imagen_original = imagen
+    def __init__(self):
+        return
 
-    def filtro_promediador(self):
-        print("aplicando filtro promediador")
-        if self.imagen_original is None:
+    def filtro_promediador(self, imagen_original, kernel):
+        n = int(kernel)
+        print("aplicando filtro promediador con kernel n  ="  + kernel)
+        if imagen_original is None:
             print("Error en la lectura de imagen filtro promediador")
             return None
         else: 
             print("lectura de imagen exitosa imagen filtro promediador")
-        imagen_filtrada = cv2.blur(self.imagen_original, (5,5))
+        imagen_filtrada = cv2.blur(imagen_original, (n,n))
         return imagen_filtrada      
     
-    def filtro_pesado(self):
-        if self.imagen_original is None:
+    def filtro_pesado(self, imagen_original):
+        print("aplicando filtro pesado")
+        if imagen_original is None:
             return None
         kernel = np.array([[1, 1, 1], [1, 5, 1], [1, 1, 1]]) / 13
-        imagen_promediador_pesado = cv2.filter2D(self.imagen_original, -1, kernel)
+        imagen_promediador_pesado = cv2.filter2D(imagen_original, -1, kernel)
         return imagen_promediador_pesado
     
-    def filtro_gaussiano(self):
+    def filtro_gaussiano(self, imagen_original):
         print("aplicando filtro gaussiano")
-        if self.imagen_original is None:
+        if imagen_original is None:
             return None
-        imagen_gaussiana = cv2.GaussianBlur(self.imagen_original, (5,5), 1)
+        imagen_gaussiana = cv2.GaussianBlur(imagen_original, (5,5), 1)
         return imagen_gaussiana
     
-    def filtro_mediana(self):
+    def filtro_mediana(self, imagen_original):
         print("aplicando filtro mediana")
-        if self.imagen_original is None:
+        if imagen_original is None:
             return None
-        imagen_mediana = cv2.medianBlur(self.imagen_original,5)
+        imagen_mediana = cv2.medianBlur(imagen_original,5)
         return imagen_mediana
     
-    def filtro_moda(self, kernel_size=3):
+    def filtro_moda(self, imagen_original, kernel_size=3):
         print("aplicando filtro Moda")
 
-        if self.imagen_original is None:
+        if imagen_original is None:
             return None 
-        imagen = self.imagen_original
+        imagen = imagen_original
         salida = np.copy(imagen)
         h, w, c = imagen.shape
         pad = kernel_size // 2
@@ -61,11 +63,11 @@ class Filtros:
 
         return salida
     
-    def filtro_bilateral(self):
+    def filtro_bilateral(self, imagen_original):
         print("aplicando filtro bilateral")
-        if self.imagen_original is None:
+        if imagen_original is None:
             return None
-        image_bilateral = cv2.bilateralFilter(self.imagen_original, 9, 75, 75)
+        image_bilateral = cv2.bilateralFilter(imagen_original, 9, 75, 75)
         return image_bilateral
     
     
