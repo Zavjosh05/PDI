@@ -19,11 +19,13 @@ class Filtros:
         imagen_filtrada = cv2.blur(imagen_original, (n,n))
         return imagen_filtrada      
     
-    def filtro_pesado(self, imagen_original):
-        print("aplicando filtro pesado")
+    def filtro_pesado(self, imagen_original, n):
         if imagen_original is None:
             return None
-        kernel = np.array([[1, 1, 1], [1, 5, 1], [1, 1, 1]]) / 13
+        if n <= 1:
+            return None
+        kernel = np.array([[1, 1, 1], [1, n, 1], [1, 1, 1]]) / 8+n
+        kernel /= np.sum(kernel)
         imagen_promediador_pesado = cv2.filter2D(imagen_original, -1, kernel)
         return imagen_promediador_pesado
     
