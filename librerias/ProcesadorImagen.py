@@ -51,5 +51,13 @@ class ProcesadorImagen:
         plt.xlim([0, 256])
         
         return fig_gray, fig_color
-
     
+    def calcular_histograma_gris(self, img):
+        imagen_en_gris = self.convertir_a_grises(img)
+        
+        # Histograma en escala de grises
+        fig_gray = plt.figure(figsize=(4, 3))
+        plt.hist(imagen_en_gris.ravel(), 256, [0, 256])
+        plt.title('Histograma en Escala de Grises')
+
+        return fig_gray

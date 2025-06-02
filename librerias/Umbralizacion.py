@@ -81,15 +81,43 @@ class Umbralizacion:
         current_label = 1
         rows, cols = binary_img.shape
     
+    def detectar_objetos_vecindad_8(self,img):
+        if self.verificar_imagen_binaria(img):
+            numero_objetos, objetos = cv2.connectedComponents(img, connectivity=8)
+            imagen_resultado = np.zeros((objetos.shape[0], objetos.shape[1],3),dtype=np.uint8)
+            colores = [np.random.randint(0,255,size=3).tolist() for _ in range(numero_objetos)]
+            colores[0] = [0,0,0]
+            for y in range(objetos.shape[0]):
+                for x in range(objetos.shape[1]):
+                    imagen_resultado[y,x] = colores[objetos[y,x]]
+
+            return imagen_resultado, numero_objetos
+        else:
+            return None, 0
+        
+    def detectar_objetos_vecindad_4(self,img):
+        if self.verificar_imagen_binaria(img):
+            numero_objetos, objetos = cv2.connectedComponents(img, connectivity=4)
+            imagen_resultado = np.zeros((objetos.shape[0], objetos.shape[1],3),dtype=np.uint8)
+            colores = [np.random.randint(0,255,size=3).tolist() for _ in range(numero_objetos)]
+            colores[0] = [0,0,0]
+            for y in range(objetos.shape[0]):
+                for x in range(objetos.shape[1]):
+                    imagen_resultado[y,x] = colores[objetos[y,x]]
+
+            return imagen_resultado, numero_objetos
+        else:
+            return None, 0
+
     # Direcciones de los 8 vecinos
     def vecindad_8(self,img):
         directions = [(-1,-1), (-1,0), (-1,1),
                     (0,-1),          (0,1),
                     (1,-1),  (1,0), (1,1)]
         
-        for i in range(rows):
-            for j in range(cols):
-                if binary_img[i,j] == 255 and labeled[i,j] == 0:  # Píxel no etiquetado
+        for i in range(400):
+            for j in range(400):
+                if img[i,j] == 255 and labeled[i,j] == 0:  # Píxel no etiquetado
                     # BFS para etiquetar componente conexa
                     queue = deque()
                     queue.append((i,j))
@@ -118,3 +146,7 @@ class Umbralizacion:
         for label in range(1, num_objects + 1):
             color = tuple(np.random.randint(0, 255, 3).tolist())
             colored_components[labeled_img == label] = color
+
+    #Funcion que devuelve True si es que la imagen es binaria
+    def verificar_imagen_binaria(self,img):
+        return  np.all((img == 0) | (img == 255))
