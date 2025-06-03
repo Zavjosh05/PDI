@@ -24,7 +24,7 @@ class Filtros:
             return None
         if n <= 1:
             return None
-        kernel = np.array([[1, 1, 1], [1, n, 1], [1, 1, 1]]) / 8+n
+        kernel = np.array([[1, 1, 1], [1, n, 1], [1, 1, 1]]) / (8+n)
         kernel /= np.sum(kernel)
         imagen_promediador_pesado = cv2.filter2D(imagen_original, -1, kernel)
         return imagen_promediador_pesado
