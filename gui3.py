@@ -1,7 +1,7 @@
 # Importación de librerías
 import numpy as np
 import cv2
-
+print("ola")
 # Importación de librerías visuales
 import matplotlib.pyplot as plt
 import customtkinter as ctk
