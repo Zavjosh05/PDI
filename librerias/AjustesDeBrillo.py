@@ -77,7 +77,7 @@ class AjustesDeBrillo:
     def transformacion_rayleigh(self, img):
         img_gray = self.procesador.convertir_a_grises(img)
         scale = 50  # Ajustar según necesidad
-        rayleigh_cdf = 1 - np.exp(-(np.arange(256)*2)/(2*(scale**2)))
+        rayleigh_cdf = 1 - np.exp(-(np.arange(256)**2)/(2*(scale**2)))
         img_rayleigh = rayleigh_cdf[img_gray] * 255
         img_rayleigh = img_rayleigh.astype('uint8')
         #hist_rayleigh = cv2.calcHist([img_rayleigh], [0], None, [256], [0, 256])
