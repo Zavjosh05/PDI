@@ -18,6 +18,8 @@ class Umbralizacion:
     def metodo_otsu(self, img):
         img_gray = self.procesador.convertir_a_grises(img)
         otsu_thresh, img_otsu = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+        closed = cv2.morphologyEx(img_otsu, cv2.MORPH_CLOSE, kernel)
         return img_otsu
 
 # 3. Multiumbralización (Otsu multinivel)
@@ -65,19 +67,48 @@ class Umbralizacion:
         current_label = 1
         rows, cols = binary_img.shape
     
-    def detectar_objetos_vecindad_8(self,img):
-        if self.verificar_imagen_binaria(img):
-            numero_objetos, objetos = cv2.connectedComponents(img, connectivity=8)
-            imagen_resultado = np.zeros((objetos.shape[0], objetos.shape[1],3),dtype=np.uint8)
-            colores = [np.random.randint(0,255,size=3).tolist() for _ in range(numero_objetos)]
-            colores[0] = [0,0,0]
-            for y in range(objetos.shape[0]):
-                for x in range(objetos.shape[1]):
-                    imagen_resultado[y,x] = colores[objetos[y,x]]
 
-            return imagen_resultado, numero_objetos
-        else:
+    def detectar_objetos_vecindad_8(self, img, min_area=100):
+        """
+        img: imagen binaria CV_8UC1 (0 o 255), sobre la que queremos detectar y contar objetos.
+        min_area: umbral mínimo de píxeles para considerar un objeto "válido".
+        
+        Retorna:
+            - output_binary (CV_8UC1): mapa binario donde cada objeto válido está en 255 (blanco).
+            - cnt_validos (int): número de objetos de área >= min_area.
+        """
+        # Verificamos primero que efectivamente sea binaria (un canal, 0/255)
+        if not self.verificar_imagen_binaria(img):
             return None, 0
+
+        # 1) Cerrar los contornos con un MORPH_CLOSE (para unir fragmentos de borde)
+        kernel_size = 5
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+        closed = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+        
+        # 2) Encontrar contornos sobre la imagen cerrada
+        contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # 3) Rellenar todos los contornos en una nueva imagen binaria de 1 canal
+        filled = np.zeros_like(img)          # mismo tamaño que img, tipo uint8, UN SOLO CANAL
+        cv2.drawContours(filled, contours, -1, 255, thickness=cv2.FILLED)
+        
+        # 4) Calcular componentes conexas sobre 'filled' (CV_8UC1)
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(filled, connectivity=8)
+        
+        # 5) Filtrar por área y generar un nuevo mapa binario solo con regiones >= min_area
+        output_binary = np.zeros_like(img)   # imagen final de un canal
+        cnt_validos = 0
+        for i in range(1, num_labels):       # i=0 es el fondo
+            area_i = stats[i, cv2.CC_STAT_AREA]
+            if area_i >= min_area:
+                # Marcar todos los píxeles de esa etiqueta como 255
+                output_binary[labels == i] = 255
+                cnt_validos += 1
+
+        return output_binary, cnt_validos
+
+
         
     def detectar_objetos_vecindad_4(self,img):
         if self.verificar_imagen_binaria(img):
@@ -134,3 +165,46 @@ class Umbralizacion:
     #Funcion que devuelve True si es que la imagen es binaria
     def verificar_imagen_binaria(self,img):
         return  np.all((img == 0) | (img == 255))
+    
+    def analizar_objetos(self, img_binaria, img_original, min_area=200):
+        if len(img_original.shape) == 2 or (len(img_original.shape) == 3 and img_original.shape[2] == 1):
+            img_color = cv2.cvtColor(img_original, cv2.COLOR_GRAY2BGR)
+        else:
+            img_color = img_original.copy()
+
+        contours, _ = cv2.findContours(img_binaria, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        lista_objetos = []
+        id_actual = 1
+
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area >= min_area:
+                perimetro = cv2.arcLength(contour, closed=True)
+                x, y, w, h = cv2.boundingRect(contour)
+
+                cv2.rectangle(img_color, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+                M = cv2.moments(contour)
+                cx, cy = (x + w // 2, y + h // 2)
+                if M['m00'] != 0:
+                    cx = int(M['m10'] / M['m00'])
+                    cy = int(M['m01'] / M['m00'])
+
+                cv2.putText(img_color, f"ID:{id_actual}", (cx - 30, cy - 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 255), 1)
+                cv2.putText(img_color, f"A:{int(area)}", (cx - 30, cy),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                cv2.putText(img_color, f"P:{int(perimetro)}", (cx - 30, cy + 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+                lista_objetos.append({
+                    'id': id_actual,
+                    'area': area,
+                    'perimetro': perimetro,
+                    'bbox': (x, y, w, h)
+                })
+
+                id_actual += 1
+
+        return img_color, lista_objetos

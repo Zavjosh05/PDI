@@ -391,6 +391,67 @@ class InterfazProcesadorImagenes(ctk.CTk):
         ctk.CTkLabel(self.ruido_frame, text="").grid(row=len(ruido_botones) + len(filtros_botones_pb) + 
                                                      len(filtros_botones_pa) + 5, column=0, pady=(0, 15))
 
+    def analizar_objetos(self, img_binaria, img_original, min_area=200):
+        if len(img_original.shape) == 2 or (len(img_original.shape) == 3 and img_original.shape[2] == 1):
+            img_color = cv2.cvtColor(img_original, cv2.COLOR_GRAY2BGR)
+        else:
+            img_color = img_original.copy()
+
+        contours, _ = cv2.findContours(img_binaria, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        lista_objetos = []
+        id_actual = 1
+
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area >= min_area:
+                perimetro = cv2.arcLength(contour, closed=True)
+                x, y, w, h = cv2.boundingRect(contour)
+
+                cv2.rectangle(img_color, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+                M = cv2.moments(contour)
+                cx, cy = (x + w // 2, y + h // 2)
+                if M['m00'] != 0:
+                    cx = int(M['m10'] / M['m00'])
+                    cy = int(M['m01'] / M['m00'])
+
+                cv2.putText(img_color, f"ID:{id_actual}", (cx - 30, cy - 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 255), 1)
+                cv2.putText(img_color, f"A:{int(area)}", (cx - 30, cy),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                cv2.putText(img_color, f"P:{int(perimetro)}", (cx - 30, cy + 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+                lista_objetos.append({
+                    'id': id_actual,
+                    'area': area,
+                    'perimetro': perimetro,
+                    'bbox': (x, y, w, h)
+                })
+
+                id_actual += 1
+
+        return img_color, lista_objetos
+
+    def aplicar_analisis_objetos(self):
+        if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
+            return
+
+        try:
+            imagen_binaria = self.imagen_display[self.indice_actual]
+            imagen_original = self.imagen_1 if self.indice_actual == 0 else self.imagen_2
+
+            imagen_resultado, datos = self.analizar_objetos(imagen_binaria, imagen_original, min_area=200)
+
+            self.imagen_display[self.indice_actual] = imagen_resultado
+            texto = f"📏 Análisis de Objetos\nSe detectaron {len(datos)} objetos\nImagen {self.indice_actual+1}"
+            self.mostrar_imagen(self.panel_segmentacion, imagen_resultado, texto)
+            self.tabview.set("✂️ Segmentación")
+
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error al analizar objetos: {str(e)}")
+
     def crear_seccion_segmentacion(self):
         # Frame para segmentación
         self.segmentacion_frame = ctk.CTkFrame(self.sidebar_frame)
@@ -414,7 +475,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
             ("🎯 Umbral adaptativo", self.aplicar_umbral_adaptativo),
             ("🎯 Minimo del histograma", self.aplicar_minimo_en_el_histograma),
             ("🎯 Vecindad 4", self.aplicar_vecindad_4),
-            ("🎯 Vecindad 8", self.aplicar_vecindad_8)
+            ("🎯 Vecindad 8", self.aplicar_vecindad_8),
+            ("📏 Análisis de Objetos", self.aplicar_analisis_objetos)
         ]
 
         for i, (texto, comando) in enumerate(segmentacion_botones):
@@ -1519,6 +1581,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 widget.destroy()
         else:
             self.mostrar_mensaje("Error al eliminar frame")
+
 
 if __name__ == "__main__":
     app = InterfazProcesadorImagenes()
