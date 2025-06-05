@@ -446,8 +446,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
             self.imagen_display[self.indice_actual] = imagen_resultado
             texto = f"📏 Análisis de Objetos\nSe detectaron {len(datos)} objetos\nImagen {self.indice_actual+1}"
-            self.mostrar_imagen(self.panel_segmentacion, imagen_resultado, texto)
-            self.tabview.set("✂️ Segmentación")
+            self.mostrar_imagen(self.panel_objetos, imagen_resultado, texto)
+            self.tabview.set("🧊 Detección de objetos")
 
         except Exception as e:
             self.mostrar_mensaje(f"❌ Error al analizar objetos: {str(e)}")
@@ -527,13 +527,32 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.main_frame.grid_columnconfigure(0, weight=1)
         self.main_frame.grid_rowconfigure(1, weight=1)
 
-        # Título del panel principal
+        # Header frame con altura fija
+        self.header_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent", height=40)
+        self.header_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
+        self.header_frame.grid_propagate(False)  # Importante para mantener altura fija
+
+        # Botón verde a la izquierda
+        self.boton_verde = ctk.CTkButton(
+            self.header_frame,
+            text="↩️",
+            fg_color="green",
+            hover_color="#006400",
+            text_color="white",
+            width=40,
+            height=30,
+            corner_radius=6,
+            command=None
+        )
+        self.boton_verde.pack(side="left")
+
+        # Título absolutamente centrado en el header
         self.main_label = ctk.CTkLabel(
-            self.main_frame,
+            self.header_frame,
             text="Área de Visualización",
             font=ctk.CTkFont(size=24, weight="bold")
         )
-        self.main_label.grid(row=0, column=0, padx=20, pady=(20, 10))
+        self.main_label.place(relx=0.5, rely=0.5, anchor="center")
 
         # Tabview para las diferentes pestañas
         self.tabview = ctk.CTkTabview(self.main_frame, width=250)
@@ -549,6 +568,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Configurar cada pestaña como scrollable
         self.configurar_pestanas()
+
+
+
 
     def configurar_pestanas(self):
         # Configurar cada pestaña con scroll
