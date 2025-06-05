@@ -56,24 +56,8 @@ class Umbralizacion:
         hist = cv2.calcHist([img_gray], [0], None, [256], [0, 256])
         smooth_hist = cv2.GaussianBlur(hist, (5,1), 0)
         min_pos = np.argmin(smooth_hist[50:200]) + 50  # Evitar extremos
-        _, img_minhist = cv2.threshold(img, min_pos, 255, cv2.THRESH_BINARY)
+        _, img_minhist = cv2.threshold(img_gray, min_pos, 255, cv2.THRESH_BINARY)
         return img_minhist
-
-    def filtro_Robert(self, img):
-
-        imagen_nueva = self.procesador.convertir_a_grises(img)
-         
-        # Definir el kernel de Robert
-        kernel_roberts_x = np.array([[1, 0], [0, -1]], dtype=np.float32)
-        kernel_roberts_y = np.array([[0, 1], [-1, 0]], dtype=np.float32)
-        # Aplicar el filtro
-        bordes_roberts_x = cv2.filter2D(imagen_nueva, -1, kernel_roberts_x)
-        bordes_roberts_y = cv2.filter2D(imagen_nueva, -1, kernel_roberts_y)
-        imagen_bordes_roberts = cv2.addWeighted(bordes_roberts_x, 0.5, bordes_roberts_y, 0.5, 0)
-
-        if(imagen_bordes_roberts.any()): 
-            print("obtencion de bordes exitosas")
-        return imagen_bordes_roberts
 
 # Función para componentes conexas con vecindad-8 (implementación manual ajskasjka equisde)
     def connected_components_8neighbors(binary_img):

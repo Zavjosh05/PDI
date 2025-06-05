@@ -1,7 +1,7 @@
 # Importación de librerías
 import numpy as np
 import cv2
-print("ola")
+
 # Importación de librerías visuales
 import matplotlib.pyplot as plt
 import customtkinter as ctk
@@ -19,6 +19,7 @@ from librerias.FiltrosPasaAltas import *
 from librerias.AjustesDeBrillo import *
 from librerias.Umbralizacion import *
 from librerias.SliderWindow import *
+from librerias.VentanaDeDecision import *
 
 
 # Configuración del tema y apariencia
@@ -405,14 +406,13 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
         # Botones de segmentación
         segmentacion_botones = [
-            ("🎯 Umbral Media", self.aplicar_segmentacion_filtro_Robert),
+            ("🎯 Umbral Media", self.aplicar_umbral_media),
             ("🎯 Método de Otsu", self.aplicar_filtro_otsu),
             ("🎯 Multiumbralización", self.aplicar_multiubralizacion),
             ("🎯 Entropía Kapur", self.aplicar_entropia_kapur),
             ("🎯 Umbral por banda", self.aplicar_umbral_banda),
             ("🎯 Umbral adaptativo", self.aplicar_umbral_adaptativo),
             ("🎯 Minimo del histograma", self.aplicar_minimo_en_el_histograma),
-            ("🎯 Filtro de Robert", self.aplicar_filtro_Robert),
             ("🎯 Vecindad 4", self.aplicar_vecindad_4),
             ("🎯 Vecindad 8", self.aplicar_vecindad_8)
         ]
@@ -482,6 +482,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.tab_logicas = self.tabview.add("🔗 Lógicas")
         self.tab_ruido = self.tabview.add("🔊 Ruido/Filtros")
         self.tab_segmentacion = self.tabview.add("✂️ Segmentación")
+        self.tab_objetos = self.tabview.add("🧊 Detección de objetos")
         self.tab_histogramas = self.tabview.add("📊 Histogramas")
 
         # Configurar cada pestaña como scrollable
@@ -494,6 +495,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
             (self.tab_logicas, "panel_logicas"),
             (self.tab_ruido, "panel_ruido"),
             (self.tab_segmentacion, "panel_segmentacion"),
+            (self.tab_objetos,"panel_objetos"),
             (self.tab_histogramas, "panel_histogramas")
         ]
 
@@ -568,7 +570,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
 
     def verificar_imagen_cargada(self, img):
         if img is None:
-            self.mostrar_mensaje("⚠️ Por favor cargue una imagen primero")
+            self.mostrar_mensaje(f"⚠️ Por favor cargue la imagen {self.indice_actual+1} primero")
             return False
         else:
             return True
@@ -825,16 +827,47 @@ class InterfazProcesadorImagenes(ctk.CTk):
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_suma_gui(self):
+        if self.imagen_1 is None or self.imagen_2 is None:
+            self.mostrar_mensaje("Se requiere alguna de las dos imagenes este cargada")
+            return
         if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
-        else:
+        ventana_suma = VentanaEmergente(
+            title="Suma",
+            mainText="Elija el tipo de suma que se desea realizar",
+            firstButton="Suma entre\ndos imagenes",
+            secondButton="Suma por\nun escalar",
+            command1=self.aplicar_suma_dos_imagenes,
+            commad2=self.aplicar_suma_escalar
+            )
+
+    def aplicar_suma_dos_imagenes(self):
+        try:
             imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0],self.imagen_display[1])
             if imagen_suma is not None:
                 self.imagen_display[0] = imagen_suma
-                self.mostrar_imagen(self.panel_logicas,imagen_suma,f"Operación suma",indicador=False)
+                self.mostrar_imagen(self.panel_logicas,imagen_suma,
+                                    f"Operación suma\nEntre dos imagenes",indicador=False)
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+        
+    def aplicar_suma_escalar(self):
+        try:
+
+            imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0])
+            if imagen_suma is not None:
+                self.imagen_display[0] = imagen_suma
+                self.mostrar_imagen(self.panel_logicas,imagen_suma,
+                                    f"Operación suma\nEntre dos imagenes",indicador=False)
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_mensaje("Error al generar la imagen")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+        
                 
     def aplicar_resta_gui(self):
         if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:

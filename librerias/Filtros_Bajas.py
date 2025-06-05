@@ -36,28 +36,21 @@ class Filtros:
         imagen_mediana = cv2.medianBlur(imagen_original,5)
         return imagen_mediana
     
-    def filtro_moda(self, imagen_original, kernel_size=3):
-        print("aplicando filtro Moda")
+    def filtro_moda(self, img, kernel_size=3):
 
-        if imagen_original is None:
+        if img is None:
             return None 
-        imagen = imagen_original
-        salida = np.copy(imagen)
-        h, w, c = imagen.shape
-        pad = kernel_size // 2
+        pad = kernel_size//2
+        padded = cv2.copyMakeBorder(img, pad, pad, pad, pad, cv2.BORDER_REFLECT)
+        result = np.zeros_like(img)
+        
+        for i in range(img.shape[0]):
+            for j in range(img.shape[1]):
+                window = padded[i:i+kernel_size, j:j+kernel_size]
+                values, counts = np.unique(window, return_counts=True)
+                result[i,j] = values[np.argmax(counts)]
+        return result
 
-        # Rellenar por canal
-        imagen_padded = np.pad(imagen, ((pad, pad), (pad, pad), (0, 0)), mode='constant', constant_values=0)
-
-        for i in range(h):
-            for j in range(w):
-                for ch in range(c):  # Aplicar por canal
-                    window = imagen_padded[i:i + kernel_size, j:j + kernel_size, ch]
-                    moda = stats.mode(window, axis=None, keepdims=False).mode
-                    salida[i, j, ch] = moda
-
-        return salida
-    
     def filtro_bilateral(self, imagen_original):
         print("aplicando filtro bilateral")
         if imagen_original is None:

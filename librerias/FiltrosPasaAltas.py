@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
+from librerias.ProcesadorImagen import *
 
 class FiltrosPasaAltas:
 
     def __init__(self):
         self.imagen_original = None
+        self.procesador = ProcesadorImagen()
     # 1. Operador Robinson (8 direcciones)
     def filtro_robinson(self, img):
         print("aplicando filtro de robinson")
@@ -27,10 +29,11 @@ class FiltrosPasaAltas:
 # 2. Operador Robert
     def operador_robert(self, img):
         print("aplicando filtro Operador de Robert")
+        img_gray = self.procesador.convertir_a_grises(img)
         roberts_x = np.array([[1, 0], [0, -1]])
         roberts_y = np.array([[0, 1], [-1, 0]])
-        roberts_x_img = cv2.filter2D(img, cv2.CV_16S, roberts_x)
-        roberts_y_img = cv2.filter2D(img, cv2.CV_16S, roberts_y)
+        roberts_x_img = cv2.filter2D(img_gray, cv2.CV_16S, roberts_x)
+        roberts_y_img = cv2.filter2D(img_gray, cv2.CV_16S, roberts_y)
         img_robert = cv2.convertScaleAbs(cv2.addWeighted(roberts_x_img, 0.5, roberts_y_img, 0.5, 0))
         return img_robert
 
