@@ -1,7 +1,8 @@
 import customtkinter as ctk
 
-class VentanaEmergente(ctk.CTkToplevel):
-    def __init__(self, master, title, mainText, firstButton, secondButton, command1, command2):
+class VentanaDeDecision(ctk.CTkToplevel):
+    def __init__(self, master=None, title="Nada", mainText="Nada", 
+                 firstButton="Nada", secondButton="Nada", command1=None, command2=None):
         super().__init__(master)
         self.title(title)
         self.geometry("300x150")
@@ -10,12 +11,16 @@ class VentanaEmergente(ctk.CTkToplevel):
         self.label = ctk.CTkLabel(self, text=mainText)
         self.label.pack(pady=20)
 
-        # Envolvemos los comandos con lambdas para agregar el self.destroy()
-        self.boton1 = ctk.CTkButton(self, text=firstButton, command=lambda: self.ejecutar_y_cerrar(command1))
-        self.boton1.pack(pady=5)
+        # Frame contenedor para los botones
+        botones_frame = ctk.CTkFrame(self)
+        botones_frame.pack(pady=10)
 
-        self.boton2 = ctk.CTkButton(self, text=secondButton, command=lambda: self.ejecutar_y_cerrar(command2))
-        self.boton2.pack(pady=5)
+        # Botones en una sola fila
+        self.boton1 = ctk.CTkButton(botones_frame, text=firstButton, command=lambda: self.ejecutar_y_cerrar(command1))
+        self.boton1.pack(side="left", padx=10)
+
+        self.boton2 = ctk.CTkButton(botones_frame, text=secondButton, command=lambda: self.ejecutar_y_cerrar(command2))
+        self.boton2.pack(side="left", padx=10)
 
     def ejecutar_y_cerrar(self, funcion):
         if funcion:

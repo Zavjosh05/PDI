@@ -597,6 +597,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
             return
         else:
             self.imagen_1 = None
+            self.imagen_display[0] = None
             self.limpiar_pestana("panel_basico")
             self.tabview.set("🔧 Básico")
 
@@ -606,6 +607,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
             return
         else:
             self.imagen_2 = None
+            self.imagen_display[1] = None
             self.limpiar_pestana("panel_basico")
             self.tabview.set("🔧 Básico")
 
@@ -827,21 +829,27 @@ class InterfazProcesadorImagenes(ctk.CTk):
             self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_suma_gui(self):
-        if self.imagen_1 is None or self.imagen_2 is None:
+        if self.imagen_1 is None and self.imagen_2 is None:
             self.mostrar_mensaje("Se requiere alguna de las dos imagenes este cargada")
             return
         if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
-        ventana_suma = VentanaEmergente(
+        ventana_suma = VentanaDeDecision(
             title="Suma",
             mainText="Elija el tipo de suma que se desea realizar",
             firstButton="Suma entre\ndos imagenes",
             secondButton="Suma por\nun escalar",
             command1=self.aplicar_suma_dos_imagenes,
-            commad2=self.aplicar_suma_escalar
+            command2=self.aplicar_suma_escalar
             )
+        ventana_suma.lift
+        ventana_suma.focus_force()
+        ventana_suma.grab_set() 
 
     def aplicar_suma_dos_imagenes(self):
+        if self.imagen_1 is None or self.imagen_2 is None:
+            self.mostrar_mensaje("Se necesita cargar las dos imagenes")
+            return
         try:
             imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0],self.imagen_display[1])
             if imagen_suma is not None:
@@ -856,10 +864,19 @@ class InterfazProcesadorImagenes(ctk.CTk):
         
     def aplicar_suma_escalar(self):
         try:
-
-            imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0])
+            ver = True
+            text_ventana = "Ingrese el escalar (de 0 a 255)"
+            while ver:
+                dialog = ctk.CTkInputDialog(text=text_ventana, title="Escalar")
+                val = int(dialog.get_input())
+                if val >= 0 and val <= 255:
+                    ver = False
+                else: 
+                    text_ventana = "Ingrese un escalar valido (de 0 a 255)"
+            
+            imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[self.indice_actual],val)
             if imagen_suma is not None:
-                self.imagen_display[0] = imagen_suma
+                self.imagen_display[self.indice_actual] = imagen_suma
                 self.mostrar_imagen(self.panel_logicas,imagen_suma,
                                     f"Operación suma\nEntre dos imagenes",indicador=False)
                 self.tabview.set("🔗 Lógicas")
