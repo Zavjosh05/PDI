@@ -878,7 +878,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
             if imagen_suma is not None:
                 self.imagen_display[self.indice_actual] = imagen_suma
                 self.mostrar_imagen(self.panel_logicas,imagen_suma,
-                                    f"Operación suma\nEntre dos imagenes",indicador=False)
+                                    f"Operación suma\nCon escalar\nImagen {self.indice_actual+1}",indicador=False)
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -887,16 +887,61 @@ class InterfazProcesadorImagenes(ctk.CTk):
         
                 
     def aplicar_resta_gui(self):
+        if self.imagen_1 is None and self.imagen_2 is None:
+            self.mostrar_mensaje("Se requiere alguna de las dos imagenes este cargada")
+            return
         if self.verificar_imagen_cargada(self.imagen_display[self.indice_actual]) is False:
             return
-        else:
+        ventana_resta = VentanaDeDecision(
+            title="Resta",
+            mainText="Elija el tipo de resta que se desea realizar",
+            firstButton="Resta entre\ndos imagenes",
+            secondButton="Resta por\nun escalar",
+            command1=self.aplicar_resta_dos_imagenes,
+            command2=self.aplicar_resta_escalar
+            )
+        ventana_resta.lift
+        ventana_resta.focus_force()
+        ventana_resta.grab_set() 
+
+    def aplicar_resta_dos_imagenes(self):
+        if self.imagen_1 is None or self.imagen_2 is None:
+            self.mostrar_mensaje("Se necesita cargar las dos imagenes")
+            return
+        try:
             imagen_resta = self.operaciones_logicas.aplicar_resta(self.imagen_display[0],self.imagen_display[1])
             if imagen_resta is not None:
                 self.imagen_display[0] = imagen_resta
-                self.mostrar_imagen(self.panel_logicas,imagen_resta,f"Operación resta",indicador=False)
+                self.mostrar_imagen(self.panel_logicas,imagen_resta,
+                                    f"Operación resta\nEntre dos imagenes",indicador=False)
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
+
+    def aplicar_resta_escalar(self):
+        try:
+            ver = True
+            text_ventana = "Ingrese el escalar (de 0 a 255)"
+            while ver:
+                dialog = ctk.CTkInputDialog(text=text_ventana, title="Escalar")
+                val = int(dialog.get_input())
+                if val >= 0 and val <= 255:
+                    ver = False
+                else: 
+                    text_ventana = "Ingrese un escalar valido (de 0 a 255)"
+            
+            imagen_resta = self.operaciones_logicas.aplicar_resta(self.imagen_display[self.indice_actual],val)
+            if imagen_resta is not None:
+                self.imagen_display[self.indice_actual] = imagen_resta
+                self.mostrar_imagen(self.panel_logicas,imagen_resta,
+                                    f"Operación resta\nCon escalar\nImagen {self.indice_actual+1}",indicador=False)
+                self.tabview.set("🔗 Lógicas")
+            else:
+                self.mostrar_mensaje("Error al generar la imagen")
+        except Exception as e:
+            self.mostrar_mensaje(f"❌ Error: {str(e)}")
 
     def aplicar_multiplicacion_gui(self):
         if self.imagen_display[0] is None or self.imagen_display[1] is None:
