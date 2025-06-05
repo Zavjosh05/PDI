@@ -54,6 +54,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.imagen_display = [None,None]
         self.imagen_1_hist = []
         self.imagen_2_hist = []
+        self.imagen_1_indice = 0
+        self.imagen_2_indice = 0
         self.indice_actual = 0
 
         self.crear_interfaz()
@@ -542,7 +544,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
             width=40,
             height=30,
             corner_radius=6,
-            command=None
+            command=self.deshacer
         )
         self.boton_verde.pack(side="left")
 
@@ -588,6 +590,20 @@ class InterfazProcesadorImagenes(ctk.CTk):
             panel = ctk.CTkScrollableFrame(tab)
             panel.pack(fill="both", expand=True, padx=10, pady=10)
             setattr(self, nombre_panel, panel)
+
+    def establecer_tabview(self, panel):
+        if panel == self.panel_basico:
+            self.tabview.set("🔧 Básico")
+        elif panel == self.panel_logicas:
+            self.tabview.set("🔗 Lógicas")
+        elif panel == self.panel_ruido:
+            self.tabview.set("🔊 Ruido/Filtros")
+        elif panel == self.panel_segmentacion:
+            self.tabview.set("✂️ Segmentación")
+        elif panel == self.panel_objetos:
+            self.tabview.set("panel_objetos")
+        elif panel == self.panel_histogramas:
+            self.tabview.set("📊 Histogramas")
 
     def crear_selector_tema(self):
         # Frame para selector de tema
@@ -636,9 +652,13 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.imagen_1 = self.cargar_imagen()
 
         if self.imagen_1 is not None:
-            self.mostrar_imagen(self.panel_basico, self.imagen_1, "Imagen 1")
+            self.mostrar_imagen(self.panel_basico, self.imagen_1, "Imagen 1", indicador=False, indicadorDeshacer=True)
             self.tabview.set("🔧 Básico")
             self.imagen_display[0] = self.imagen_1
+            self.imagen_1_indice += 1
+            self.imagen_1_hist.append(self.imagen_1)
+            self.imagen_1_hist.append("Imagen 1")
+            self.imagen_1_hist.append(self.panel_basico)
         else:
             self.mostrar_mensaje("❌ Error al cargar la imagen")
 
@@ -646,11 +666,55 @@ class InterfazProcesadorImagenes(ctk.CTk):
         self.imagen_2 = self.cargar_imagen()
 
         if self.imagen_2 is not None:
-            self.mostrar_imagen(self.panel_basico, self.imagen_2, "Imagen 2")
+            self.mostrar_imagen(self.panel_basico, self.imagen_2, "Imagen 2",indicador=False,indicadorDeshacer=True)
             self.tabview.set("🔧 Básico")
             self.imagen_display[1] = self.imagen_2
+            self.imagen_2_indice += 1
+            self.imagen_2_hist.append(self.imagen_2)
+            self.imagen_2_hist.append("Imagen 2")
+            self.imagen_2_hist.append(self.panel_basico)
         else:
             self.mostrar_mensaje("❌ Error al cargar la imagen")
+
+    def deshacer(self):
+        if self.indice_actual == 0:
+            if self.imagen_1_indice == 0:
+                self.mostrar_mensaje("Ya no hay más cambios por deshacer")
+                return
+            self.imagen_1_indice -= 1
+            if self.imagen_1_indice == 0:
+                self.limpiar_todas_las_pestanas()
+                self.tabview.set("🔧 Básico")
+                self.eliminar_imagen_1()
+            else:
+                for i in range(3):
+                    self.imagen_1_hist.pop()
+                self.mostrar_imagen(
+                    panel=self.imagen_1_hist[(self.imagen_1_indice*3)-1],
+                    imagen=self.imagen_1_hist[(self.imagen_1_indice*3)-3],
+                    titulo=self.imagen_1_hist[(self.imagen_1_indice*3)-2],
+                    indicadorDeshacer=True
+                    )
+                self.establecer_tabview(self.imagen_1_hist[(self.imagen_1_indice*3)-1])
+        else:
+            if self.imagen_2_indice == 0:
+                self.mostrar_mensaje("Ya no hay más cambios por deshacer")
+                return
+            self.imagen_2_indice -= 1
+            if self.imagen_2_indice == 0:
+                self.limpiar_todas_las_pestanas()
+                self.tabview.set("🔧 Básico")
+                self.eliminar_imagen_2()
+            else:
+                for i in range(3):
+                    self.imagen_2_hist.pop()
+                self.mostrar_imagen(
+                    panel=self.imagen_2_hist[(self.imagen_2_indice*3)-1],
+                    imagen=self.imagen_2_hist[(self.imagen_2_indice*3)-3],
+                    titulo=self.imagen_2_hist[(self.imagen_2_indice*3)-2],
+                    indicadorDeshacer=True
+                    )
+                self.establecer_tabview(self.imagen_2_hist[(self.imagen_2_indice*3)-1])
 
     def verificar_imagen_cargada(self, img):
         if img is None:
@@ -663,14 +727,21 @@ class InterfazProcesadorImagenes(ctk.CTk):
         if self.verificar_imagen_cargada(self.imagen_1) is False:
             return
         
+        self.imagen_1_indice = 0
+        self.imagen_1_hist.clear()
+        self.limpiar_todas_las_pestanas()
         self.imagen_display[0] = self.imagen_1
         self.mostrar_imagen(self.panel_basico, self.imagen_1, "Imagen 1",indicador=False)
         self.tabview.set("🔧 Básico")
+
 
     def restablecer_imagen_2(self):
         if self.verificar_imagen_cargada(self.imagen_2) is False:
             return
         
+        self.imagen_2_indice = 0
+        self.imagen_2_hist.clear()
+        self.limpiar_todas_las_pestanas()
         self.imagen_display[1] = self.imagen_2
         self.mostrar_imagen(self.panel_basico, self.imagen_2, "Imagen 2",indicador=False)
         self.tabview.set("🔧 Básico")
@@ -680,6 +751,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
             self.mostrar_mensaje("No se ha cargado ninguna imagen")
             return
         else:
+            self.imagen_1_indice = 0
+            self.imagen_1_hist.clear()
+            self.limpiar_todas_las_pestanas()
             self.imagen_1 = None
             self.imagen_display[0] = None
             self.limpiar_pestana("panel_basico")
@@ -690,6 +764,9 @@ class InterfazProcesadorImagenes(ctk.CTk):
             self.mostrar_mensaje("No se ha cargado ninguna imagen")
             return
         else:
+            self.imagen_2_indice = 0
+            self.imagen_2_hist.clear()
+            self.limpiar_todas_las_pestanas()
             self.imagen_2 = None
             self.imagen_display[1] = None
             self.limpiar_pestana("panel_basico")
@@ -937,9 +1014,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
         try:
             imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[0],self.imagen_display[1])
             if imagen_suma is not None:
-                self.imagen_display[0] = imagen_suma
                 self.mostrar_imagen(self.panel_logicas,imagen_suma,
-                                    f"Operación suma\nEntre dos imagenes",indicador=False)
+                                    f"Operación suma\nEntre dos imagenes\nImagen {self.indice_actual+1}")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -960,9 +1036,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
             
             imagen_suma = self.operaciones_logicas.aplicar_suma(self.imagen_display[self.indice_actual],val)
             if imagen_suma is not None:
-                self.imagen_display[self.indice_actual] = imagen_suma
                 self.mostrar_imagen(self.panel_logicas,imagen_suma,
-                                    f"Operación suma\nCon escalar\nImagen {self.indice_actual+1}",indicador=False)
+                                    f"Operación suma\nCon escalar\nImagen {self.indice_actual+1}")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -995,9 +1070,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
         try:
             imagen_resta = self.operaciones_logicas.aplicar_resta(self.imagen_display[0],self.imagen_display[1])
             if imagen_resta is not None:
-                self.imagen_display[0] = imagen_resta
                 self.mostrar_imagen(self.panel_logicas,imagen_resta,
-                                    f"Operación resta\nEntre dos imagenes",indicador=False)
+                                    f"Operación resta\nEntre dos imagenes\nImagen {self.indice_actual+1}")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -1018,9 +1092,8 @@ class InterfazProcesadorImagenes(ctk.CTk):
             
             imagen_resta = self.operaciones_logicas.aplicar_resta(self.imagen_display[self.indice_actual],val)
             if imagen_resta is not None:
-                self.imagen_display[self.indice_actual] = imagen_resta
                 self.mostrar_imagen(self.panel_logicas,imagen_resta,
-                                    f"Operación resta\nCon escalar\nImagen {self.indice_actual+1}",indicador=False)
+                                    f"Operación resta\nCon escalar\nImagen {self.indice_actual+1}")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -1033,8 +1106,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         else:
             imagen_mult = self.operaciones_logicas.aplicar_multiplicacion(self.imagen_display[0],self.imagen_display[1])
             if imagen_mult is not None:
-                self.imagen_display[0] = imagen_mult
-                self.mostrar_imagen(self.panel_logicas,imagen_mult,f"Operación multiplicación",indicador=False)
+                self.mostrar_imagen(self.panel_logicas,imagen_mult,f"Operación multiplicación\nImagen {self.indice_actual+1}")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -1045,8 +1117,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         else:
             imagen_and = self.operaciones_logicas.aplicar_and(self.imagen_display[0],self.imagen_display[1])
             if imagen_and is not None:
-                self.imagen_display[0] = imagen_and
-                self.mostrar_imagen(self.panel_logicas,imagen_and,f"Operación AND",indicador=False)
+                self.mostrar_imagen(self.panel_logicas,imagen_and,f"Operación AND\nImagen {self.indice_actual+1}")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -1058,8 +1129,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         try:
             imagen_or = self.operaciones_logicas.aplicar_or(self.imagen_display[0],self.imagen_display[1])
             if imagen_or is not None:
-                self.imagen_display[0] = imagen_or
-                self.mostrar_imagen(self.panel_logicas,imagen_or,"Operación OR",indicador=False)
+                self.mostrar_imagen(self.panel_logicas,imagen_or,f"Operación OR\nImagen {self.indice_actual+1}")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -1072,8 +1142,7 @@ class InterfazProcesadorImagenes(ctk.CTk):
         try:
             imagen_xor = self.operaciones_logicas.aplicar_xor(self.imagen_display[0],self.imagen_display[1])
             if imagen_xor is not None:
-                self.imagen_display[0] = imagen_xor
-                self.mostrar_imagen(self.panel_logicas,imagen_xor,"Operación XOR",indicador=False)
+                self.mostrar_imagen(self.panel_logicas,imagen_xor,f"Operación XOR\nImagen {self.indice_actual+1}")
                 self.tabview.set("🔗 Lógicas")
             else:
                 self.mostrar_mensaje("Error al generar la imagen")
@@ -1495,11 +1564,23 @@ class InterfazProcesadorImagenes(ctk.CTk):
             except Exception as e:
                 self.mostrar_mensaje(f"❌ Error al guardar: {str(e)}")
 
-    def mostrar_imagen(self, panel, imagen, titulo, indicador=True):
+    def mostrar_imagen(self, panel, imagen, titulo, indicador=True, indicadorDeshacer=False):
         # Limpiar panel
 
         if indicador is True:
             self.imagen_display[self.indice_actual] = imagen
+        if indicadorDeshacer is False:
+            if self.indice_actual == 0:
+                self.imagen_1_indice += 1
+                self.imagen_1_hist.append(imagen)
+                self.imagen_1_hist.append(titulo)
+                self.imagen_1_hist.append(panel)
+            else:
+                self.imagen_2_indice += 1
+                self.imagen_2_hist.append(imagen)
+                self.imagen_2_hist.append(titulo)
+                self.imagen_2_hist.append(panel)
+
         for widget in panel.winfo_children():
             widget.destroy()
 
@@ -1603,6 +1684,14 @@ class InterfazProcesadorImagenes(ctk.CTk):
                 widget.destroy()
         else:
             self.mostrar_mensaje("Error al eliminar frame")
+
+    def limpiar_todas_las_pestanas(self):
+        self.limpiar_pestana("panel_basico")
+        self.limpiar_pestana("panel_logicas")
+        self.limpiar_pestana("panel_ruido")
+        self.limpiar_pestana("panel_segmentacion")
+        self.limpiar_pestana("panel_objetos")
+        self.limpiar_pestana("panel_histogramas")
 
 
 if __name__ == "__main__":
